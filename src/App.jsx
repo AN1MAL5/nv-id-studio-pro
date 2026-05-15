@@ -141,6 +141,13 @@ const CameraCapture = ({ onCapture, onClose }) => {
   );
 };
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const genDD = () => {
+  let dd = '000';
+  for (let i = 0; i < 18; i++) dd += Math.floor(Math.random() * 10).toString();
+  return dd;
+};
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 const App = () => {
   const canvasRef = useRef(null);
@@ -159,6 +166,7 @@ const App = () => {
   const [activeTab, setActiveTab] = useState('front');
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
+  const [batchOpen, setBatchOpen] = useState(false);
 
   const [info, setInfo] = useState({
     dlNo: '1234567890',
@@ -174,15 +182,15 @@ const App = () => {
     class: 'C',
     end: 'NONE',
     rest: 'NONE',
-    iss: '2025-01-01',
-    exp: '2026-01-01',
+    iss: '2025-04-14',
+    exp: '2033-04-08',
     sex: '1',
     heightFeet: '5',
     heightInches: '9',
     wgt: '180',
     eyes: 'BLU',
     hair: 'BRN',
-    dd: '000123456789012345678',
+    dd: genDD(),
     country: 'USA',
     compliance: 'F'
   });
@@ -297,9 +305,7 @@ const App = () => {
   };
 
   const generateRandomDD = () => {
-    let randomDD = '000';
-    for (let i = 0; i < 18; i++) randomDD += Math.floor(Math.random() * 10).toString();
-    setInfo(prev => ({ ...prev, dd: randomDD }));
+    setInfo(prev => ({ ...prev, dd: genDD() }));
   };
 
   useEffect(() => {
@@ -651,39 +657,39 @@ const App = () => {
         />
       )}
 
-      <div className="min-h-screen bg-[#0f172a] p-3 lg:p-10 font-sans text-slate-200 selection:bg-blue-500/30">
+      <div className="min-h-screen bg-[#0f172a] p-3 sm:p-5 lg:p-10 font-sans text-slate-200 selection:bg-blue-500/30">
         <div className="max-w-[1800px] mx-auto">
-          <header className="mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-900/20">
-                <ShieldCheck className="w-8 h-8 text-white" />
+          <header className="mb-4 sm:mb-6 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-600 p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-900/20 shrink-0">
+                <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-white tracking-tight">NV ID STUDIO PRO</h1>
-                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">AAMVA 2025 COMPLIANT</p>
+                <h1 className="text-lg sm:text-2xl font-black text-white tracking-tight leading-tight">NV ID STUDIO PRO</h1>
+                <p className="text-slate-500 text-[9px] font-bold uppercase tracking-[0.15em] hidden sm:block">AAMVA 2025 COMPLIANT</p>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={() => setShowRef(!showRef)}
-                className={`flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-black transition-all shadow-lg active:scale-95 ${showRef ? 'bg-amber-500 text-white shadow-amber-900/20' : 'bg-[#1e293b] text-slate-300 hover:bg-[#334155]'}`}
+                className={`flex items-center justify-center gap-1.5 px-3 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black transition-all shadow-lg active:scale-95 text-sm sm:text-base ${showRef ? 'bg-amber-500 text-white shadow-amber-900/20' : 'bg-[#1e293b] text-slate-300'}`}
               >
-                {showRef ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                <span className="whitespace-nowrap">{showRef ? 'Hide Reference' : 'Check Alignment'}</span>
+                {showRef ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
+                <span className="hidden sm:inline whitespace-nowrap">{showRef ? 'Hide Reference' : 'Check Alignment'}</span>
               </button>
               <button
                 onClick={activeTab === 'front' ? downloadFront : downloadBack}
-                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl shadow-blue-900/40 active:scale-95"
+                className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white px-3 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black transition-all shadow-xl shadow-blue-900/40 active:scale-95 text-sm sm:text-base"
               >
-                <Download className="w-5 h-5" />
+                <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span className="whitespace-nowrap">Download {activeTab === 'front' ? 'Front' : 'Back'}</span>
               </button>
             </div>
           </header>
 
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-10">
-            <div className="xl:col-span-4 space-y-6 order-2 xl:order-1">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6 lg:gap-10">
+            <div className="xl:col-span-4 space-y-4 sm:space-y-6 order-2 xl:order-1">
               <div className="bg-[#1e293b] p-5 lg:p-6 rounded-[32px] shadow-sm border border-slate-800/50">
                 <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
                   <Upload className="w-3 h-3" /> File Inputs
@@ -769,44 +775,52 @@ const App = () => {
                 </div>
               </div>
 
-              <div className="bg-[#1e293b] p-5 lg:p-6 rounded-[32px] shadow-sm border border-slate-800/50">
-                <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <FileText className="w-4 h-4" /> Batch Processing
-                </h2>
-                <div className="flex flex-col gap-3 mb-2">
-                  <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold opacity-60">
-                    Format: FIRST:LAST:ADDRESS:CITY:STATE:ZIP:SSN:DOB
-                  </p>
-                  <textarea
-                    value={batchText}
-                    onChange={(e) => setBatchText(e.target.value)}
-                    placeholder={`CHRISTOPHER:JOHNSON:1841 PRINCETON COURT SW:BIRMINGHAM:AL:35211:423-45-3249:9/1/1995\nNEXT:PERSON:123 STREET...`}
-                    className="w-full bg-[#0f172a] border border-slate-800 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500/30 outline-none font-mono h-32 resize-y text-slate-300"
-                    disabled={isBatching}
-                  />
-                  <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-end mt-2">
-                    <div className="flex flex-col flex-1">
-                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1 mb-1"># of Lines</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={batchCount}
-                        onChange={(e) => setBatchCount(parseInt(e.target.value) || 1)}
-                        className="bg-[#0f172a] border border-slate-800 rounded-xl px-4 py-3 text-[14px] focus:ring-4 focus:ring-blue-500/20 outline-none font-black text-white"
-                        disabled={isBatching}
-                      />
+              <div className="bg-[#1e293b] rounded-[32px] shadow-sm border border-slate-800/50 overflow-hidden">
+                <button
+                  onClick={() => setBatchOpen(o => !o)}
+                  className="w-full flex items-center justify-between px-5 lg:px-6 py-5 text-left"
+                >
+                  <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                    <FileText className="w-4 h-4" /> Batch Processing
+                  </h2>
+                  <span className={`text-slate-500 text-lg transition-transform duration-200 ${batchOpen ? 'rotate-180' : ''}`}>▾</span>
+                </button>
+                {batchOpen && (
+                  <div className="px-5 lg:px-6 pb-5 flex flex-col gap-3">
+                    <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold opacity-60">
+                      Format: FIRST:LAST:ADDRESS:CITY:STATE:ZIP:SSN:DOB
+                    </p>
+                    <textarea
+                      value={batchText}
+                      onChange={(e) => setBatchText(e.target.value)}
+                      placeholder={`CHRISTOPHER:JOHNSON:1841 PRINCETON COURT SW:BIRMINGHAM:AL:35211:423-45-3249:9/1/1995\nNEXT:PERSON:123 STREET...`}
+                      className="w-full bg-[#0f172a] border border-slate-800 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500/30 outline-none font-mono h-32 resize-y text-slate-300"
+                      disabled={isBatching}
+                    />
+                    <div className="flex gap-3 items-end mt-1">
+                      <div className="flex flex-col flex-1">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1 mb-1"># of Lines</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={batchCount}
+                          onChange={(e) => setBatchCount(parseInt(e.target.value) || 1)}
+                          className="bg-[#0f172a] border border-slate-800 rounded-xl px-4 py-3 text-[14px] focus:ring-4 focus:ring-blue-500/20 outline-none font-black text-white"
+                          disabled={isBatching}
+                        />
+                      </div>
+                      {!isBatching ? (
+                        <button onClick={startBatch} className="bg-green-600 hover:bg-green-500 text-white font-black px-6 py-3 rounded-xl transition-colors shadow-lg shadow-green-900/20">
+                          Start Batch
+                        </button>
+                      ) : (
+                        <button onClick={() => abortBatchRef.current = true} className="bg-red-600 hover:bg-red-500 text-white font-black px-6 py-3 rounded-xl transition-colors shadow-lg shadow-red-900/20 animate-pulse">
+                          Stop Batch
+                        </button>
+                      )}
                     </div>
-                    {!isBatching ? (
-                      <button onClick={startBatch} className="bg-green-600 hover:bg-green-500 text-white font-black px-6 py-3 rounded-xl transition-colors shadow-lg shadow-green-900/20">
-                        Start Batch
-                      </button>
-                    ) : (
-                      <button onClick={() => abortBatchRef.current = true} className="bg-red-600 hover:bg-red-500 text-white font-black px-6 py-3 rounded-xl transition-colors shadow-lg shadow-red-900/20 animate-pulse">
-                        Stop Batch
-                      </button>
-                    )}
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="bg-[#1e293b] p-5 lg:p-6 rounded-[32px] shadow-sm border border-slate-800/50">
