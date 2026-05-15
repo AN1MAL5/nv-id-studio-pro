@@ -12,25 +12,53 @@ const CameraCapture = ({ onCapture, onClose }) => {
 
   useEffect(() => {
     let active = true;
+    let fallbackTimer = null;
+
+    const markReady = () => {
+      if (active && !ready) setReady(true);
+    };
+
     const start = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } },
-          audio: false,
-        });
+        // Try front camera first, fall back to any camera
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'user' } },
+            audio: false,
+          });
+        } catch {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
+
         if (!active) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.onloadedmetadata = () => { videoRef.current.play(); setReady(true); };
-        }
+
+        const vid = videoRef.current;
+        if (!vid) return;
+
+        vid.srcObject = stream;
+
+        // Listen on multiple events — mobile fires different ones
+        ['loadedmetadata', 'loadeddata', 'canplay', 'playing'].forEach(evt => {
+          vid.addEventListener(evt, markReady, { once: true });
+        });
+
+        // Force play (required on iOS/Android)
+        try { await vid.play(); } catch (_) { /* autoPlay attr handles it */ }
+
+        // Fallback: if none of the events fire within 3s, assume it's running
+        fallbackTimer = setTimeout(markReady, 3000);
       } catch (e) {
-        setError('Camera access denied or unavailable.');
+        if (active) setError('Camera access denied or unavailable.');
       }
     };
+
     start();
+
     return () => {
       active = false;
+      clearTimeout(fallbackTimer);
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     };
   }, []);
@@ -69,6 +97,7 @@ const CameraCapture = ({ onCapture, onClose }) => {
         <video
           ref={videoRef}
           className="w-full h-full object-cover bg-white"
+          autoPlay
           playsInline
           muted
         />
