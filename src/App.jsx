@@ -1,8 +1,147 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Type, Download, Upload, ShieldCheck, UserCircle, Eye, EyeOff, FileText, Barcode, ScanFace, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Type, Download, Upload, ShieldCheck, UserCircle, Eye, EyeOff, FileText, Barcode, ScanFace, Loader2, Camera, X } from 'lucide-react';
 import bwipjs from 'bwip-js';
 import { removeBackground } from '@imgly/background-removal';
 
+// ─── Camera Capture Modal ─────────────────────────────────────────────────────
+const CameraCapture = ({ onCapture, onClose }) => {
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    const start = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } },
+          audio: false,
+        });
+        if (!active) { stream.getTracks().forEach(t => t.stop()); return; }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => { videoRef.current.play(); setReady(true); };
+        }
+      } catch (e) {
+        setError('Camera access denied or unavailable.');
+      }
+    };
+    start();
+    return () => {
+      active = false;
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    };
+  }, []);
+
+  const capture = useCallback(() => {
+    if (!videoRef.current) return;
+    const v = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = v.videoWidth;
+    canvas.height = v.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(v, 0, 0);
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      onCapture(blob);
+      onClose();
+    }, 'image/png');
+  }, [onCapture, onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
+      {/* Back button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 left-4 bg-[#f59e0b] text-black font-black text-base px-5 py-2 rounded z-10 flex items-center gap-1 shadow-lg"
+      >
+        &lt; BACK
+      </button>
+
+      {/* Camera viewport with face guide overlay */}
+      <div className="relative" style={{ width: 'min(90vw, 420px)', aspectRatio: '3/4' }}>
+        {/* Blue border frame */}
+        <div className="absolute inset-0 border-4 border-blue-500 z-10 pointer-events-none rounded-sm" />
+
+        {/* Video */}
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover bg-white"
+          playsInline
+          muted
+        />
+
+        {/* White overlay when not ready */}
+        {!ready && !error && (
+          <div className="absolute inset-0 bg-white flex items-center justify-center z-20">
+            <div className="text-gray-500 font-bold text-sm">Starting camera…</div>
+          </div>
+        )}
+        {error && (
+          <div className="absolute inset-0 bg-white flex items-center justify-center z-20 p-6 text-center">
+            <div className="text-red-500 font-bold text-sm">{error}</div>
+          </div>
+        )}
+
+        {/* Face alignment overlay — drawn in SVG over the video */}
+        <svg
+          className="absolute inset-0 w-full h-full z-10 pointer-events-none"
+          viewBox="0 0 300 400"
+          preserveAspectRatio="none"
+        >
+          {/* Green face oval */}
+          <ellipse
+            cx="150" cy="165" rx="80" ry="108"
+            fill="none" stroke="#22c55e" strokeWidth="2.5"
+          />
+
+          {/* Vertical center line */}
+          <line x1="150" y1="57" x2="150" y2="273" stroke="#22c55e" strokeWidth="2" />
+
+          {/* Horizontal eye-level line */}
+          <line x1="62" y1="170" x2="238" y2="170" stroke="#22c55e" strokeWidth="2" />
+
+          {/* Dashed eye zone rectangle */}
+          <rect
+            x="78" y="153" width="144" height="34"
+            fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="8,5"
+          />
+
+          {/* Red left eye marker */}
+          <line x1="100" y1="155" x2="100" y2="185" stroke="#ef4444" strokeWidth="2.5" />
+          {/* Red right eye marker */}
+          <line x1="200" y1="155" x2="200" y2="185" stroke="#ef4444" strokeWidth="2.5" />
+
+          {/* Horizontal red eye tick (left) */}
+          <line x1="78" y1="165" x2="100" y2="165" stroke="#ef4444" strokeWidth="2" />
+          {/* Horizontal red eye tick (right) */}
+          <line x1="200" y1="165" x2="222" y2="165" stroke="#ef4444" strokeWidth="2" />
+
+          {/* Red nose marker */}
+          <line x1="138" y1="225" x2="162" y2="225" stroke="#ef4444" strokeWidth="2.5" />
+          <line x1="150" y1="219" x2="150" y2="231" stroke="#ef4444" strokeWidth="1.5" />
+
+          {/* Red shoulder markers */}
+          <line x1="90" y1="345" x2="90" y2="395" stroke="#ef4444" strokeWidth="2.5" />
+          <line x1="210" y1="345" x2="210" y2="395" stroke="#ef4444" strokeWidth="2.5" />
+        </svg>
+      </div>
+
+      {/* Capture button */}
+      <button
+        onClick={capture}
+        disabled={!ready}
+        className="mt-8 bg-[#f59e0b] text-black font-black text-xl px-16 py-4 rounded shadow-lg disabled:opacity-40 tracking-widest uppercase"
+      >
+        CAPTURE
+      </button>
+    </div>
+  );
+};
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
 const App = () => {
   const canvasRef = useRef(null);
   const backCanvasRef = useRef(null);
@@ -17,8 +156,9 @@ const App = () => {
   const [batchCount, setBatchCount] = useState(1);
   const [isBatching, setIsBatching] = useState(false);
   const abortBatchRef = useRef(false);
-  const [activeTab, setActiveTab] = useState('front'); // 'front' or 'back'
+  const [activeTab, setActiveTab] = useState('front');
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
 
   const [info, setInfo] = useState({
     dlNo: '1234567890',
@@ -36,13 +176,13 @@ const App = () => {
     rest: 'NONE',
     iss: '2025-01-01',
     exp: '2026-01-01',
-    sex: '1', // 1=M, 2=F
+    sex: '1',
     heightFeet: '5',
     heightInches: '9',
     wgt: '180',
     eyes: 'BLU',
     hair: 'BRN',
-    dd: '000123456789012345678', // 000 + 18 digits
+    dd: '000123456789012345678',
     country: 'USA',
     compliance: 'F'
   });
@@ -120,14 +260,7 @@ const App = () => {
       let randomDl = Math.floor(Math.random() * 9 + 1).toString();
       for (let j = 0; j < 9; j++) randomDl += Math.floor(Math.random() * 10).toString();
 
-      const batchInfo = {
-        ...info,
-        firstName,
-        middleName,
-        lastName,
-        dob: formattedDob,
-        dlNo: randomDl
-      };
+      const batchInfo = { ...info, firstName, middleName, lastName, dob: formattedDob, dlNo: randomDl };
 
       drawCanvas(batchInfo);
       generateBarcode(batchInfo);
@@ -170,16 +303,13 @@ const App = () => {
   };
 
   useEffect(() => {
-    const loadDefaults = () => {
-      const front = new Image();
-      front.onload = () => setBackgroundImage(front);
-      front.src = '/FrontTemplate.jpg';
+    const front = new Image();
+    front.onload = () => setBackgroundImage(front);
+    front.src = '/FrontTemplate.jpg';
 
-      const back = new Image();
-      back.onload = () => setBackBackgroundImage(back);
-      back.src = '/BackTemplate.jpg';
-    };
-    loadDefaults();
+    const back = new Image();
+    back.onload = () => setBackBackgroundImage(back);
+    back.src = '/BackTemplate.png';
   }, []);
 
   useEffect(() => {
@@ -193,10 +323,9 @@ const App = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const displayInfo = getDisplayInfo(data);
-    
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw the back template
     if (backBackgroundImage) {
       ctx.drawImage(backBackgroundImage, 0, 0, canvas.width, canvas.height);
     } else {
@@ -204,16 +333,14 @@ const App = () => {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Draw the generated barcode based on the reference photo
     if (barcodeCanvasRef.current && barcodeCanvasRef.current.width > 0) {
-      const bx = canvas.width * 0.43; // ~43% from left
-      const by = canvas.height * 0.125; // ~12.5% from top
-      const bw = canvas.width * 0.53; // ~53% width
-      const bh = canvas.height * 0.275; // ~27.5% height
+      const bx = canvas.width * 0.43;
+      const by = canvas.height * 0.125;
+      const bw = canvas.width * 0.53;
+      const bh = canvas.height * 0.275;
       ctx.drawImage(barcodeCanvasRef.current, bx, by, bw, bh);
     }
 
-    // Draw the text
     const capitalizeFirst = (str) => {
       if (!str) return '';
       return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -221,27 +348,15 @@ const App = () => {
 
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = '#000000'; // Match reference black color
+    ctx.fillStyle = '#000000';
 
-    // DOB & ISS (Top left block)
-    ctx.font = '700 20px "Arial", "Helvetica", sans-serif'; // Reduced from 24px to match labels
-    const dobX = canvas.width * 0.113; // 11.3% width
-    const dobY = canvas.height * 0.101; // 10.1% height
-    const issX = canvas.width * 0.103; // 10.3% width
-    const issY = canvas.height * 0.150; // 15.0% height
-    
-    ctx.fillText(displayInfo.dob, dobX, dobY);
-    ctx.fillText(displayInfo.iss, issX, issY);
-    
-    // END & REST (Middle/Bottom block)
+    ctx.font = '700 20px "Arial", "Helvetica", sans-serif';
+    ctx.fillText(displayInfo.dob, canvas.width * 0.113, canvas.height * 0.101);
+    ctx.fillText(displayInfo.iss, canvas.width * 0.103, canvas.height * 0.150);
+
     ctx.font = '700 21px "Arial", "Helvetica", sans-serif';
-    const endX = canvas.width * 0.486; // 48.6% width
-    const endY = canvas.height * 0.688; // 68.8% height
-    const restX = canvas.width * 0.461; // 46.1% width
-    const restY = canvas.height * 0.807; // 80.7% height
-
-    ctx.fillText(capitalizeFirst(displayInfo.end), endX, endY);
-    ctx.fillText(capitalizeFirst(displayInfo.rest), restX, restY);
+    ctx.fillText(capitalizeFirst(displayInfo.end), canvas.width * 0.486, canvas.height * 0.688);
+    ctx.fillText(capitalizeFirst(displayInfo.rest), canvas.width * 0.461, canvas.height * 0.807);
   };
 
   const drawCanvas = (data = info) => {
@@ -249,7 +364,7 @@ const App = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const displayInfo = getDisplayInfo(data);
-    
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (backgroundImage) {
@@ -270,34 +385,25 @@ const App = () => {
       const imgRatio = img.width / img.height;
       const boxRatio = w / h;
       let sx, sy, sw, sh;
-      
+
       if (fit === 'cover') {
         if (imgRatio > boxRatio) {
-          sw = img.height * boxRatio;
-          sh = img.height;
-          sx = (img.width - sw) / 2;
-          sy = 0;
+          sw = img.height * boxRatio; sh = img.height;
+          sx = (img.width - sw) / 2; sy = 0;
         } else {
-          sw = img.width;
-          sh = img.width / boxRatio;
-          sx = 0;
-          sy = (img.height - sh) / 2;
+          sw = img.width; sh = img.width / boxRatio;
+          sx = 0; sy = (img.height - sh) / 2;
         }
       } else {
-        // contain
         if (imgRatio > boxRatio) {
-          // Image is wider than box
           const scale = w / img.width;
           const nh = img.height * scale;
-          const ny = y + (h - nh) / 2;
-          ctx.drawImage(img, x, ny, w, nh);
+          ctx.drawImage(img, x, y + (h - nh) / 2, w, nh);
           return;
         } else {
-          // Image is taller than box
           const scale = h / img.height;
           const nw = img.width * scale;
-          const nx = x + (w - nw) / 2;
-          ctx.drawImage(img, nx, y, nw, h);
+          ctx.drawImage(img, x + (w - nw) / 2, y, nw, h);
           return;
         }
       }
@@ -305,32 +411,21 @@ const App = () => {
     };
 
     if (photo && !showRef) {
-      const px = canvas.width * 0.075; 
-      const py = canvas.height * 0.202; 
-      const pw = canvas.width * 0.265; 
+      const px = canvas.width * 0.075;
+      const py = canvas.height * 0.202;
+      const pw = canvas.width * 0.265;
       const ph = canvas.height * 0.565;
-      
-      // Use 'contain' to respect the "original border" as requested, 
-      // ensuring the subject isn't stretched or overly zoomed.
       drawImageFit(photo, px, py, pw, ph, 'contain');
-      
+
       ctx.save();
       ctx.globalAlpha = 0.38;
       ctx.filter = 'grayscale(100%) brightness(1.25) contrast(0.85)';
-      const gx = canvas.width * 0.835;
-      const gy = canvas.height * 0.635;
-      const gw = canvas.width * 0.115;
-      const gh = canvas.height * 0.215;
-      drawImageFit(photo, gx, gy, gw, gh, 'contain');
+      drawImageFit(photo, canvas.width * 0.835, canvas.height * 0.635, canvas.width * 0.115, canvas.height * 0.215, 'contain');
       ctx.restore();
     }
 
     if (signature && !showRef) {
-      const sx = canvas.width * 0.075;
-      const sy = canvas.height * 0.816;
-      const sw = canvas.width * 0.265;
-      const sh = canvas.height * 0.094;
-      ctx.drawImage(signature, sx, sy, sw, sh);
+      ctx.drawImage(signature, canvas.width * 0.075, canvas.height * 0.816, canvas.width * 0.265, canvas.height * 0.094);
     }
 
     if (!showRef) {
@@ -351,9 +446,7 @@ const App = () => {
         }
 
         if (text) {
-          const x = (field.x / 100) * canvas.width;
-          const y = (field.y / 100) * canvas.height;
-          ctx.fillText(text, x, y);
+          ctx.fillText(text, (field.x / 100) * canvas.width, (field.y / 100) * canvas.height);
         }
       });
     }
@@ -404,16 +497,16 @@ const App = () => {
       docDiscriminator: data.dd.trim()
     };
 
-    let payload = "DL"; 
-    const mandatoryFields = ["DCA", "DCB", "DCD", "DBA", "DCS", "DAC", "DAD", "DBD", "DBB", "DBC", "DAY", "DAU", "DAG", "DAI", "DAJ", "DAK", "DAQ", "DCF", "DCG", "DDE", "DDF", "DDG"];
+    let payload = "DL";
+    const mandatoryFields = ["DCA","DCB","DCD","DBA","DCS","DAC","DAD","DBD","DBB","DBC","DAY","DAU","DAG","DAI","DAJ","DAK","DAQ","DCF","DCG","DDE","DDF","DDG"];
 
     const addField = (id, val) => {
-        let finalVal = val;
-        if (!finalVal || finalVal === "") {
-            if (mandatoryFields.includes(id)) finalVal = "NONE";
-            else return;
-        }
-        payload += `${id}${finalVal}\n`;
+      let finalVal = val;
+      if (!finalVal || finalVal === "") {
+        if (mandatoryFields.includes(id)) finalVal = "NONE";
+        else return;
+      }
+      payload += `${id}${finalVal}\n`;
     };
 
     addField("DAQ", payloadData.dlNumber);
@@ -489,34 +582,51 @@ const App = () => {
   const handleAdvancedPhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     setIsProcessingPhoto(true);
     try {
       const blob = await removeBackground(file, {
-        model: 'medium', // Use medium for better quality/speed balance
-        output: {
-          type: 'image/png',
-          quality: 0.8
-        }
+        model: 'medium',
+        output: { type: 'image/png', quality: 0.8 }
       });
-      
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
-        img.onload = () => {
-          setPhoto(img);
-          setIsProcessingPhoto(false);
-        };
+        img.onload = () => { setPhoto(img); setIsProcessingPhoto(false); };
         img.src = event.target.result;
       };
       reader.readAsDataURL(blob);
     } catch (error) {
       console.error("Background removal failed:", error);
       setIsProcessingPhoto(false);
-      // Fallback to regular upload if AI fails
       handleFileChange(e, setPhoto);
     }
   };
+
+  const handleCameraCapture = useCallback(async (blob) => {
+    setIsProcessingPhoto(true);
+    try {
+      const processedBlob = await removeBackground(blob, {
+        model: 'medium',
+        output: { type: 'image/png', quality: 0.8 }
+      });
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => { setPhoto(img); setIsProcessingPhoto(false); };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(processedBlob);
+    } catch (error) {
+      console.error("Background removal failed:", error);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => { setPhoto(img); setIsProcessingPhoto(false); };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(blob);
+    }
+  }, []);
 
   const downloadFront = () => {
     const link = document.createElement('a');
@@ -533,244 +643,272 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a] p-3 lg:p-10 font-sans text-slate-200 selection:bg-blue-500/30">
-      <div className="max-w-[1800px] mx-auto">
-        <header className="mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-900/20">
-              <ShieldCheck className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-white tracking-tight">NV ID STUDIO PRO</h1>
-              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">AAMVA 2025 COMPLIANT</p>
-            </div>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-3">
-             <button 
-              onClick={() => setShowRef(!showRef)}
-              className={`flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-black transition-all shadow-lg active:scale-95 ${showRef ? 'bg-amber-500 text-white shadow-amber-900/20' : 'bg-[#1e293b] text-slate-300 hover:bg-[#334155]'}`}
-            >
-              {showRef ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              <span className="whitespace-nowrap">{showRef ? 'Hide Reference' : 'Check Alignment'}</span>
-            </button>
-            <button 
-              onClick={activeTab === 'front' ? downloadFront : downloadBack}
-              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl shadow-blue-900/40 active:scale-95"
-            >
-              <Download className="w-5 h-5" />
-              <span className="whitespace-nowrap">Download {activeTab === 'front' ? 'Front' : 'Back'}</span>
-            </button>
-          </div>
-        </header>
+    <>
+      {showCamera && (
+        <CameraCapture
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-10">
-          <div className="xl:col-span-4 space-y-6 order-2 xl:order-1">
-            <div className="bg-[#1e293b] p-5 lg:p-6 rounded-[32px] shadow-sm border border-slate-800/50">
-              <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
-                <Upload className="w-3 h-3" /> File Inputs
-              </h2>
-              <div className="space-y-4">
-                <div className="flex gap-4 mb-4">
-                  <div className="flex-1 flex flex-col gap-2">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1">Front Active</label>
-                    <div className="aspect-[1000/630] rounded-xl overflow-hidden border border-slate-800 bg-[#0f172a] relative ring-1 ring-white/5">
-                      {backgroundImage ? (
-                        <img src={backgroundImage.src} className="w-full h-full object-cover opacity-80" alt="Front Preview" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-600">Loading...</div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-1 flex flex-col gap-2">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1">Back Active</label>
-                    <div className="aspect-[1000/630] rounded-xl overflow-hidden border border-slate-800 bg-[#0f172a] relative ring-1 ring-white/5">
-                      {backBackgroundImage ? (
-                        <img src={backBackgroundImage.src} className="w-full h-full object-cover opacity-80" alt="Back Preview" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-600">Loading...</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <FileComp label="Front Template" onChange={(e) => handleFileChange(e, setBackgroundImage)} />
-                  <FileComp label="Back Template" onChange={(e) => handleFileChange(e, setBackBackgroundImage)} />
-                </div>
-                <FileComp label="Ref Image" onChange={(e) => handleFileChange(e, setReferenceImage)} />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1">Photo</label>
-                    <div className="flex flex-col gap-2">
-                      <FileComp label="Regular" onChange={(e) => handleFileChange(e, setPhoto)} />
-                      <button 
-                        className={`relative flex items-center justify-center gap-2 border-2 border-dashed rounded-xl p-2 transition-all ${isProcessingPhoto ? 'bg-blue-900/20 border-blue-500/50' : 'bg-blue-500/5 border-slate-800 hover:bg-blue-500/10 hover:border-blue-500/30'}`}
-                        disabled={isProcessingPhoto}
-                      >
-                        <input 
-                          type="file" 
-                          onChange={handleAdvancedPhotoUpload} 
-                          className="absolute inset-0 opacity-0 cursor-pointer z-10" 
-                          disabled={isProcessingPhoto}
-                        />
-                        {isProcessingPhoto ? (
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="w-3 h-3 animate-spin text-blue-400" />
-                            <span className="text-[9px] font-black text-blue-400 uppercase">AI Processing...</span>
-                          </div>
+      <div className="min-h-screen bg-[#0f172a] p-3 lg:p-10 font-sans text-slate-200 selection:bg-blue-500/30">
+        <div className="max-w-[1800px] mx-auto">
+          <header className="mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-900/20">
+                <ShieldCheck className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-black text-white tracking-tight">NV ID STUDIO PRO</h1>
+                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">AAMVA 2025 COMPLIANT</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setShowRef(!showRef)}
+                className={`flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-black transition-all shadow-lg active:scale-95 ${showRef ? 'bg-amber-500 text-white shadow-amber-900/20' : 'bg-[#1e293b] text-slate-300 hover:bg-[#334155]'}`}
+              >
+                {showRef ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                <span className="whitespace-nowrap">{showRef ? 'Hide Reference' : 'Check Alignment'}</span>
+              </button>
+              <button
+                onClick={activeTab === 'front' ? downloadFront : downloadBack}
+                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl shadow-blue-900/40 active:scale-95"
+              >
+                <Download className="w-5 h-5" />
+                <span className="whitespace-nowrap">Download {activeTab === 'front' ? 'Front' : 'Back'}</span>
+              </button>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-10">
+            <div className="xl:col-span-4 space-y-6 order-2 xl:order-1">
+              <div className="bg-[#1e293b] p-5 lg:p-6 rounded-[32px] shadow-sm border border-slate-800/50">
+                <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                  <Upload className="w-3 h-3" /> File Inputs
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex gap-4 mb-4">
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1">Front Active</label>
+                      <div className="aspect-[1000/630] rounded-xl overflow-hidden border border-slate-800 bg-[#0f172a] relative ring-1 ring-white/5">
+                        {backgroundImage ? (
+                          <img src={backgroundImage.src} className="w-full h-full object-cover opacity-80" alt="Front Preview" />
                         ) : (
-                          <div className="flex items-center gap-2">
-                            <ScanFace className="w-3 h-3 text-blue-400" />
-                            <span className="text-[9px] font-black text-blue-400 uppercase text-center">Advanced Face Edit</span>
-                          </div>
+                          <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-600">Loading...</div>
                         )}
-                      </button>
+                      </div>
+                    </div>
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1">Back Active</label>
+                      <div className="aspect-[1000/630] rounded-xl overflow-hidden border border-slate-800 bg-[#0f172a] relative ring-1 ring-white/5">
+                        {backBackgroundImage ? (
+                          <img src={backBackgroundImage.src} className="w-full h-full object-cover opacity-80" alt="Back Preview" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-600">Loading...</div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <FileComp label="Signature" onChange={(e) => handleFileChange(e, setSignature)} />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[#1e293b] p-5 lg:p-6 rounded-[32px] shadow-sm border border-slate-800/50">
-              <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <FileText className="w-4 h-4" /> Batch Processing
-              </h2>
-              <div className="flex flex-col gap-3 mb-2">
-                <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold opacity-60">
-                  Format: FIRST:LAST:ADDRESS:CITY:STATE:ZIP:SSN:DOB
-                </p>
-                <textarea
-                  value={batchText}
-                  onChange={(e) => setBatchText(e.target.value)}
-                  placeholder={`CHRISTOPHER:JOHNSON:1841 PRINCETON COURT SW:BIRMINGHAM:AL:35211:423-45-3249:9/1/1995\nNEXT:PERSON:123 STREET...`}
-                  className="w-full bg-[#0f172a] border border-slate-800 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500/30 outline-none font-mono h-32 resize-y text-slate-300"
-                  disabled={isBatching}
-                />
-                <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-end mt-2">
-                  <div className="flex flex-col flex-1">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1 mb-1"># of Lines</label>
-                    <input 
-                      type="number" 
-                      min="1" 
-                      value={batchCount} 
-                      onChange={(e) => setBatchCount(parseInt(e.target.value) || 1)}
-                      className="bg-[#0f172a] border border-slate-800 rounded-xl px-4 py-3 text-[14px] focus:ring-4 focus:ring-blue-500/20 outline-none font-black text-white"
-                      disabled={isBatching}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FileComp label="Front Template" onChange={(e) => handleFileChange(e, setBackgroundImage)} />
+                    <FileComp label="Back Template" onChange={(e) => handleFileChange(e, setBackBackgroundImage)} />
                   </div>
-                  {!isBatching ? (
-                    <button onClick={startBatch} className="bg-green-600 hover:bg-green-500 text-white font-black px-6 py-3 rounded-xl transition-colors shadow-lg shadow-green-900/20">
-                      Start Batch
-                    </button>
-                  ) : (
-                    <button onClick={() => abortBatchRef.current = true} className="bg-red-600 hover:bg-red-500 text-white font-black px-6 py-3 rounded-xl transition-colors shadow-lg shadow-red-900/20 animate-pulse">
-                      Stop Batch
-                    </button>
-                  )}
+                  <FileComp label="Ref Image" onChange={(e) => handleFileChange(e, setReferenceImage)} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1">Photo</label>
+                      <div className="flex flex-col gap-2">
+                        <FileComp label="Regular" onChange={(e) => handleFileChange(e, setPhoto)} />
+
+                        {/* Advanced Face Edit row: file upload + camera button */}
+                        <div className="flex gap-2">
+                          <button
+                            className={`relative flex flex-1 items-center justify-center gap-2 border-2 border-dashed rounded-xl p-2 transition-all ${isProcessingPhoto ? 'bg-blue-900/20 border-blue-500/50' : 'bg-blue-500/5 border-slate-800 hover:bg-blue-500/10 hover:border-blue-500/30'}`}
+                            disabled={isProcessingPhoto}
+                          >
+                            <input
+                              type="file"
+                              onChange={handleAdvancedPhotoUpload}
+                              className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                              disabled={isProcessingPhoto}
+                            />
+                            {isProcessingPhoto ? (
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="w-3 h-3 animate-spin text-blue-400" />
+                                <span className="text-[9px] font-black text-blue-400 uppercase">AI Processing...</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <ScanFace className="w-3 h-3 text-blue-400" />
+                                <span className="text-[9px] font-black text-blue-400 uppercase text-center">Advanced Face Edit</span>
+                              </div>
+                            )}
+                          </button>
+
+                          {/* Camera button */}
+                          <button
+                            onClick={() => setShowCamera(true)}
+                            disabled={isProcessingPhoto}
+                            title="Open Camera"
+                            className="flex items-center justify-center border-2 border-dashed border-slate-800 rounded-xl px-3 py-2 bg-blue-500/5 hover:bg-blue-500/10 hover:border-blue-500/30 transition-all disabled:opacity-40"
+                          >
+                            {isProcessingPhoto ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                            ) : (
+                              <Camera className="w-4 h-4 text-blue-400" />
+                            )}
+                          </button>
+                        </div>
+
+                      </div>
+                    </div>
+                    <FileComp label="Signature" onChange={(e) => handleFileChange(e, setSignature)} />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-[#1e293b] p-5 lg:p-6 rounded-[32px] shadow-sm border border-slate-800/50">
-              <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Identity Data</h2>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                <DataGroup label="DL Number" name="dlNo" value={info.dlNo} onChange={handleInputChange} action={{ label: 'GEN', onClick: generateRandomDL }} />
-                <div className="flex flex-col gap-1.5">
+              <div className="bg-[#1e293b] p-5 lg:p-6 rounded-[32px] shadow-sm border border-slate-800/50">
+                <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <FileText className="w-4 h-4" /> Batch Processing
+                </h2>
+                <div className="flex flex-col gap-3 mb-2">
+                  <p className="text-[9px] text-slate-400 uppercase tracking-wider font-bold opacity-60">
+                    Format: FIRST:LAST:ADDRESS:CITY:STATE:ZIP:SSN:DOB
+                  </p>
+                  <textarea
+                    value={batchText}
+                    onChange={(e) => setBatchText(e.target.value)}
+                    placeholder={`CHRISTOPHER:JOHNSON:1841 PRINCETON COURT SW:BIRMINGHAM:AL:35211:423-45-3249:9/1/1995\nNEXT:PERSON:123 STREET...`}
+                    className="w-full bg-[#0f172a] border border-slate-800 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-500/30 outline-none font-mono h-32 resize-y text-slate-300"
+                    disabled={isBatching}
+                  />
+                  <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-end mt-2">
+                    <div className="flex flex-col flex-1">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1 mb-1"># of Lines</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={batchCount}
+                        onChange={(e) => setBatchCount(parseInt(e.target.value) || 1)}
+                        className="bg-[#0f172a] border border-slate-800 rounded-xl px-4 py-3 text-[14px] focus:ring-4 focus:ring-blue-500/20 outline-none font-black text-white"
+                        disabled={isBatching}
+                      />
+                    </div>
+                    {!isBatching ? (
+                      <button onClick={startBatch} className="bg-green-600 hover:bg-green-500 text-white font-black px-6 py-3 rounded-xl transition-colors shadow-lg shadow-green-900/20">
+                        Start Batch
+                      </button>
+                    ) : (
+                      <button onClick={() => abortBatchRef.current = true} className="bg-red-600 hover:bg-red-500 text-white font-black px-6 py-3 rounded-xl transition-colors shadow-lg shadow-red-900/20 animate-pulse">
+                        Stop Batch
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#1e293b] p-5 lg:p-6 rounded-[32px] shadow-sm border border-slate-800/50">
+                <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Identity Data</h2>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                  <DataGroup label="DL Number" name="dlNo" value={info.dlNo} onChange={handleInputChange} action={{ label: 'GEN', onClick: generateRandomDL }} />
+                  <div className="flex flex-col gap-1.5">
                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1">DOB</label>
                     <input type="date" name="dob" value={info.dob} onChange={handleInputChange} className="bg-[#0f172a] border border-slate-800 rounded-xl px-4 py-3 text-[14px] focus:ring-4 focus:ring-blue-500/20 focus:bg-[#1e293b] outline-none transition-all font-black text-white appearance-none" />
-                </div>
-                <DataGroup label="First Name" name="firstName" value={info.firstName} onChange={handleInputChange} />
-                <DataGroup label="Last Name" name="lastName" value={info.lastName} onChange={handleInputChange} />
-                <DataGroup label="Middle Name" name="middleName" value={info.middleName} onChange={handleInputChange} />
-                <DataGroup label="Suffix" name="suffix" value={info.suffix} onChange={handleInputChange} />
-                <DataGroup label="Street Address" name="address1" value={info.address1} onChange={handleInputChange} className="col-span-2" />
-                <DataGroup label="City" name="city" value={info.city} onChange={handleInputChange} />
-                <DataGroup label="State" name="state" value={info.state} onChange={handleInputChange} />
-                <DataGroup label="Zip" name="zip" value={info.zip} onChange={handleInputChange} className="col-span-2" />
-                
-                <div className="col-span-2 grid grid-cols-3 gap-3">
-                  <DataGroup label="Class" name="class" value={info.class} onChange={handleInputChange} />
-                  <DataGroup label="End" name="end" value={info.end} onChange={handleInputChange} />
-                  <DataGroup label="Rest" name="rest" value={info.rest} onChange={handleInputChange} />
-                </div>
+                  </div>
+                  <DataGroup label="First Name" name="firstName" value={info.firstName} onChange={handleInputChange} />
+                  <DataGroup label="Last Name" name="lastName" value={info.lastName} onChange={handleInputChange} />
+                  <DataGroup label="Middle Name" name="middleName" value={info.middleName} onChange={handleInputChange} />
+                  <DataGroup label="Suffix" name="suffix" value={info.suffix} onChange={handleInputChange} />
+                  <DataGroup label="Street Address" name="address1" value={info.address1} onChange={handleInputChange} className="col-span-2" />
+                  <DataGroup label="City" name="city" value={info.city} onChange={handleInputChange} />
+                  <DataGroup label="State" name="state" value={info.state} onChange={handleInputChange} />
+                  <DataGroup label="Zip" name="zip" value={info.zip} onChange={handleInputChange} className="col-span-2" />
 
-                <div className="flex flex-col gap-1.5">
+                  <div className="col-span-2 grid grid-cols-3 gap-3">
+                    <DataGroup label="Class" name="class" value={info.class} onChange={handleInputChange} />
+                    <DataGroup label="End" name="end" value={info.end} onChange={handleInputChange} />
+                    <DataGroup label="Rest" name="rest" value={info.rest} onChange={handleInputChange} />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1">ISS Date</label>
                     <input type="date" name="iss" value={info.iss} onChange={handleInputChange} className="bg-[#0f172a] border border-slate-800 rounded-xl px-4 py-3 text-[14px] focus:ring-4 focus:ring-blue-500/20 focus:bg-[#1e293b] outline-none transition-all font-black text-white" />
-                </div>
-                <div className="flex flex-col gap-1.5">
+                  </div>
+                  <div className="flex flex-col gap-1.5">
                     <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1">EXP Date</label>
                     <input type="date" name="exp" value={info.exp} onChange={handleInputChange} className="bg-[#0f172a] border border-slate-800 rounded-xl px-4 py-3 text-[14px] focus:ring-4 focus:ring-blue-500/20 focus:bg-[#1e293b] outline-none transition-all font-black text-white" />
-                </div>
+                  </div>
 
-                <div className="col-span-2 grid grid-cols-5 gap-1.5">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1">Sex</label>
-                    <select name="sex" value={info.sex} onChange={handleInputChange} className="bg-[#0f172a] border border-slate-800 rounded-xl px-2 py-3 text-[14px] font-black text-white outline-none">
+                  <div className="col-span-2 grid grid-cols-5 gap-1.5">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider ml-1">Sex</label>
+                      <select name="sex" value={info.sex} onChange={handleInputChange} className="bg-[#0f172a] border border-slate-800 rounded-xl px-2 py-3 text-[14px] font-black text-white outline-none">
                         <option value="1">M</option>
                         <option value="2">F</option>
                         <option value="9">X</option>
-                    </select>
+                      </select>
+                    </div>
+                    <DataGroup label="Ft" name="heightFeet" value={info.heightFeet} onChange={handleInputChange} />
+                    <DataGroup label="In" name="heightInches" value={info.heightInches} onChange={handleInputChange} />
+                    <DataGroup label="Wt" name="wgt" value={info.wgt} onChange={handleInputChange} />
+                    <DataGroup label="Ey" name="eyes" value={info.eyes} onChange={handleInputChange} />
                   </div>
-                  <DataGroup label="Ft" name="heightFeet" value={info.heightFeet} onChange={handleInputChange} />
-                  <DataGroup label="In" name="heightInches" value={info.heightInches} onChange={handleInputChange} />
-                  <DataGroup label="Wt" name="wgt" value={info.wgt} onChange={handleInputChange} />
-                  <DataGroup label="Ey" name="eyes" value={info.eyes} onChange={handleInputChange} />
+
+                  <DataGroup label="Audit Code (DD)" name="dd" value={info.dd} onChange={handleInputChange} className="col-span-2" action={{ label: 'GEN', onClick: generateRandomDD }} />
+                  <DataGroup label="Compliance" name="compliance" value={info.compliance} onChange={handleInputChange} />
+                  <DataGroup label="Country" name="country" value={info.country} onChange={handleInputChange} />
                 </div>
-                
-                <DataGroup label="Audit Code (DD)" name="dd" value={info.dd} onChange={handleInputChange} className="col-span-2" action={{ label: 'GEN', onClick: generateRandomDD }} />
-                <DataGroup label="Compliance" name="compliance" value={info.compliance} onChange={handleInputChange} />
-                <DataGroup label="Country" name="country" value={info.country} onChange={handleInputChange} />
               </div>
             </div>
-          </div>
 
-          <div className="xl:col-span-8 order-1 xl:order-2">
-            <div className="sticky top-6 lg:top-10">
-              <div className="flex gap-4 mb-6">
-                <button 
-                  onClick={() => setActiveTab('front')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black transition-all ${activeTab === 'front' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-[#1e293b] text-slate-400 hover:bg-[#334155]'}`}
-                >
-                  <UserCircle className="w-5 h-5" /> Front ID
-                </button>
-                <button 
-                  onClick={() => setActiveTab('back')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black transition-all ${activeTab === 'back' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-[#1e293b] text-slate-400 hover:bg-[#334155]'}`}
-                >
-                  <Barcode className="w-5 h-5" /> Back Barcode
-                </button>
-              </div>
-
-              <div className="bg-[#1e293b] p-3 lg:p-4 rounded-[32px] lg:rounded-[40px] shadow-2xl border border-slate-800">
-                <div className="relative aspect-[1000/630] bg-[#0f172a] rounded-2xl overflow-hidden flex items-center justify-center ring-1 ring-white/5">
-                  <canvas 
-                    ref={canvasRef} 
-                    width={1000} 
-                    height={630} 
-                    className={`w-full h-full object-contain cursor-crosshair ${activeTab === 'front' ? 'block' : 'hidden'}`}
-                  />
-                  <canvas 
-                    ref={backCanvasRef} 
-                    width={1000} 
-                    height={630} 
-                    className={`w-full h-full object-contain cursor-crosshair ${activeTab === 'back' ? 'block' : 'hidden'}`}
-                  />
-                  <canvas ref={barcodeCanvasRef} style={{ display: 'none' }} />
+            <div className="xl:col-span-8 order-1 xl:order-2">
+              <div className="sticky top-6 lg:top-10">
+                <div className="flex gap-4 mb-6">
+                  <button
+                    onClick={() => setActiveTab('front')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black transition-all ${activeTab === 'front' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-[#1e293b] text-slate-400 hover:bg-[#334155]'}`}
+                  >
+                    <UserCircle className="w-5 h-5" /> Front ID
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('back')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-black transition-all ${activeTab === 'back' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-[#1e293b] text-slate-400 hover:bg-[#334155]'}`}
+                  >
+                    <Barcode className="w-5 h-5" /> Back Barcode
+                  </button>
                 </div>
-              </div>
 
-              <div className="mt-8 grid grid-cols-2 md:flex md:justify-center gap-3 lg:gap-6">
-                <Legend label="Baseline Fix" />
-                <Legend label="Condensed Weight" />
-                <Legend label="Nudged X-Offset" />
+                <div className="bg-[#1e293b] p-3 lg:p-4 rounded-[32px] lg:rounded-[40px] shadow-2xl border border-slate-800">
+                  <div className="relative aspect-[1000/630] bg-[#0f172a] rounded-2xl overflow-hidden flex items-center justify-center ring-1 ring-white/5">
+                    <canvas
+                      ref={canvasRef}
+                      width={1000}
+                      height={630}
+                      className={`w-full h-full object-contain cursor-crosshair ${activeTab === 'front' ? 'block' : 'hidden'}`}
+                    />
+                    <canvas
+                      ref={backCanvasRef}
+                      width={1000}
+                      height={630}
+                      className={`w-full h-full object-contain cursor-crosshair ${activeTab === 'back' ? 'block' : 'hidden'}`}
+                    />
+                    <canvas ref={barcodeCanvasRef} style={{ display: 'none' }} />
+                  </div>
+                </div>
+
+                <div className="mt-8 grid grid-cols-2 md:flex md:justify-center gap-3 lg:gap-6">
+                  <Legend label="Baseline Fix" />
+                  <Legend label="Condensed Weight" />
+                  <Legend label="Nudged X-Offset" />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
