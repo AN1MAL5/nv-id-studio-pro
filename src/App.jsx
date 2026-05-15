@@ -900,7 +900,7 @@ const App = () => {
                       ref={canvasRef}
                       width={1000}
                       height={630}
-                      className={`w-full h-full object-contain cursor-crosshair ${activeTab === 'front' ? 'block' : 'hidden'}`}
+                      className={`w-full h-full object-contain cursor-crosshair bg-[#ffffff] ${activeTab === 'front' ? 'block' : 'hidden'}`}
                     />
                     <canvas
                       ref={backCanvasRef}
