@@ -384,8 +384,6 @@ const App = () => {
   const [cardSide,    setCardSide]    = useState('front');
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const [showCamera,  setShowCamera]  = useState(false);
-  const [navTab,      setNavTab]      = useState('photo');
-
   // Canvas info — only updated from InfoPanel via debounce, not on every keypress
   const [info, setInfo] = useState({ ...DEFAULT_INFO });
   const infoRef = useRef(info);
@@ -573,12 +571,6 @@ const App = () => {
     setIsBatching(false);
   };
 
-  const navItems = [
-    { id: 'photo', label: 'Photo', icon: Camera },
-    { id: 'info',  label: 'Info',  icon: ClipboardList },
-    { id: 'batch', label: 'Batch', icon: Layers },
-  ];
-
   return (
     <>
       {showCamera && <CameraCapture onCapture={handleCameraCapture} onClose={() => setShowCamera(false)} />}
@@ -631,41 +623,24 @@ const App = () => {
         </div>
 
         {/* ── Scrollable Panel ── */}
-        <div className="flex-1 overflow-y-auto px-4 pt-2" style={{ WebkitOverflowScrolling: 'touch' }}>
-          {navTab === 'photo' && (
-            <PhotoPanel
-              backgroundImage={backgroundImage} backBackgroundImage={backBackgroundImage}
-              photo={photo} signature={signature} referenceImage={referenceImage} showRef={showRef}
-              isProcessingPhoto={isProcessingPhoto} setShowCamera={setShowCamera} setShowRef={setShowRef}
-              setPhoto={setPhoto} setSignature={setSignature} setBackgroundImage={setBackgroundImage}
-              setBackBackgroundImage={setBackBackgroundImage} setReferenceImage={setReferenceImage}
-              handleAdvancedPhotoUpload={handleAdvancedPhotoUpload}
-            />
-          )}
-          {navTab === 'info' && (
-            <InfoPanel initialInfo={DEFAULT_INFO} onInfoChange={handleInfoChange} />
-          )}
-          {navTab === 'batch' && (
-            <BatchPanel
-              batchText={batchText} setBatchText={setBatchText}
-              batchCount={batchCount} setBatchCount={setBatchCount}
-              isBatching={isBatching} onStart={startBatch}
-              onStop={() => { abortBatchRef.current = true; }}
-            />
-          )}
+        <div className="flex-1 overflow-y-auto px-4 pt-2 pb-safe"
+          style={{ WebkitOverflowScrolling: 'touch', paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
+          <PhotoPanel
+            backgroundImage={backgroundImage} backBackgroundImage={backBackgroundImage}
+            photo={photo} signature={signature} referenceImage={referenceImage} showRef={showRef}
+            isProcessingPhoto={isProcessingPhoto} setShowCamera={setShowCamera} setShowRef={setShowRef}
+            setPhoto={setPhoto} setSignature={setSignature} setBackgroundImage={setBackgroundImage}
+            setBackBackgroundImage={setBackBackgroundImage} setReferenceImage={setReferenceImage}
+            handleAdvancedPhotoUpload={handleAdvancedPhotoUpload}
+          />
+          <InfoPanel initialInfo={DEFAULT_INFO} onInfoChange={handleInfoChange} />
+          <BatchPanel
+            batchText={batchText} setBatchText={setBatchText}
+            batchCount={batchCount} setBatchCount={setBatchCount}
+            isBatching={isBatching} onStart={startBatch}
+            onStop={() => { abortBatchRef.current = true; }}
+          />
         </div>
-
-        {/* ── Bottom Nav ── */}
-        <nav className="shrink-0 bg-[#0f172a] border-t border-slate-800 flex"
-          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
-          {navItems.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setNavTab(id)}
-              className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-all active:scale-95 ${navTab===id ? 'text-blue-400' : 'text-slate-600'}`}>
-              <Icon className={`w-6 h-6 ${navTab===id?'scale-110':''}`} />
-              <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
-            </button>
-          ))}
-        </nav>
       </div>
     </>
   );
