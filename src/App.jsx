@@ -399,7 +399,7 @@ const App = () => {
     ...data,
     dob: fmt(data.dob), iss: fmt(data.iss), exp: fmt(data.exp),
     address2: `${data.city}, ${data.state} ${data.zip}`.toUpperCase(),
-    hgt: `${data.heightFeet}'-${data.heightInches}"`,
+    hgt: `${data.heightFeet}'-${String(data.heightInches).padStart(2,'0')}"`,
     sex: data.sex === '1' ? 'M' : data.sex === '2' ? 'F' : 'X',
     wgt: `${data.wgt} lbs`,
   });
