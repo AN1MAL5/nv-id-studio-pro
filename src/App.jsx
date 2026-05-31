@@ -395,14 +395,21 @@ const App = () => {
 
   const fmt = (d) => { if (!d) return ''; const [y, m, dd] = d.split('-'); return `${m}/${dd}/${y}`; };
 
-  const getDisplayInfo = (data) => ({
-    ...data,
-    dob: fmt(data.dob), iss: fmt(data.iss), exp: fmt(data.exp),
-    address2: `${data.city}, ${data.state} ${data.zip}`.toUpperCase(),
-    hgt: `${data.heightFeet}'-${String(data.heightInches).padStart(2,'0')}"`,
-    sex: data.sex === '1' ? 'M' : data.sex === '2' ? 'F' : 'X',
-    wgt: `${data.wgt} lbs`,
-  });
+  const getDisplayInfo = (data) => {
+    const parts = [data.firstName, data.middleName].filter(Boolean);
+    const fullFirst = data.suffix
+      ? `${parts.join(' ')}, ${data.suffix}`
+      : parts.join(' ');
+    return {
+      ...data,
+      dob: fmt(data.dob), iss: fmt(data.iss), exp: fmt(data.exp),
+      address2: `${data.city}, ${data.state} ${data.zip}`.toUpperCase(),
+      hgt: `${data.heightFeet}'-${String(data.heightInches).padStart(2,'0')}"`,
+      sex: data.sex === '1' ? 'M' : data.sex === '2' ? 'F' : 'X',
+      wgt: `${data.wgt} lbs`,
+      firstName: fullFirst,
+    };
+  };
 
   const mapping = {
     dlNo:      { x: 47.7, y: 25.3, font: '700 24px "Arial Narrow",sans-serif' },
