@@ -14,6 +14,8 @@ const genDD = () => {
   return dd;
 };
 
+const genDL = () => Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join('');
+
 const loadImageFile = (file, setter) => {
   const reader = new FileReader();
   reader.onload = ev => {
@@ -24,6 +26,16 @@ const loadImageFile = (file, setter) => {
   reader.readAsDataURL(file);
 };
 
+const DEFAULT_INFO = {
+  dlNo: '1234567890', dob: '1990-01-01',
+  lastName: 'DOE', firstName: 'JOHN', middleName: '', suffix: '',
+  address1: '123 Main St', city: 'ANYTOWN', state: 'NV', zip: '12345',
+  class: 'C', end: 'NONE', rest: 'NONE',
+  iss: '2025-04-14', exp: '2033-04-08',
+  sex: '1', heightFeet: '5', heightInches: '9', wgt: '180',
+  eyes: 'BLU', hair: 'BRN', dd: genDD(), country: 'USA', compliance: 'F',
+};
+
 // ─── Reusable UI ──────────────────────────────────────────────────────────────
 const SectionCard = ({ title, children }) => (
   <div className="bg-[#1e293b] rounded-2xl p-4 border border-slate-800">
@@ -32,22 +44,24 @@ const SectionCard = ({ title, children }) => (
   </div>
 );
 
-const Input = ({ label, name, value, onChange, type = 'text', className = '' }) => (
+const Field = ({ label, name, value, onChange, type = 'text', className = '' }) => (
   <div className={`flex flex-col gap-1.5 ${className}`}>
     <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{label}</label>
     <input
       type={type} name={name} value={value} onChange={onChange}
+      autoComplete="off" autoCorrect="off" spellCheck={false}
       className="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none"
     />
   </div>
 );
 
-const InputWithBtn = ({ label, name, value, onChange, btnLabel, onBtn }) => (
+const FieldWithBtn = ({ label, name, value, onChange, btnLabel, onBtn }) => (
   <div className="flex flex-col gap-1.5">
     <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{label}</label>
     <div className="flex gap-2">
       <input
         type="text" name={name} value={value} onChange={onChange}
+        autoComplete="off" autoCorrect="off" spellCheck={false}
         className="flex-1 bg-[#0f172a] border border-slate-700 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
       />
       <button type="button" onClick={onBtn}
@@ -159,20 +173,19 @@ const CameraCapture = ({ onCapture, onClose }) => {
 const PhotoPanel = ({
   backgroundImage, backBackgroundImage, photo, signature, referenceImage, showRef,
   isProcessingPhoto, setShowCamera, setShowRef, setPhoto, setSignature,
-  setBackgroundImage, setBackBackgroundImage, setReferenceImage,
-  handleAdvancedPhotoUpload,
+  setBackgroundImage, setBackBackgroundImage, setReferenceImage, handleAdvancedPhotoUpload,
 }) => (
   <div className="space-y-4 pb-4">
     <SectionCard title="Templates">
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-2">
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Front</p>
-          {backgroundImage && <img src={backgroundImage.src} className="w-full aspect-[1000/630] object-cover rounded-xl opacity-80 border border-slate-700" alt="front template" />}
+          {backgroundImage && <img src={backgroundImage.src} className="w-full aspect-[1000/630] object-cover rounded-xl opacity-80 border border-slate-700" alt="front" />}
           <UploadBtn label="Replace" onChange={e => e.target.files[0] && loadImageFile(e.target.files[0], setBackgroundImage)} icon={Upload} />
         </div>
         <div className="flex flex-col gap-2">
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Back</p>
-          {backBackgroundImage && <img src={backBackgroundImage.src} className="w-full aspect-[1000/630] object-cover rounded-xl opacity-80 border border-slate-700" alt="back template" />}
+          {backBackgroundImage && <img src={backBackgroundImage.src} className="w-full aspect-[1000/630] object-cover rounded-xl opacity-80 border border-slate-700" alt="back" />}
           <UploadBtn label="Replace" onChange={e => e.target.files[0] && loadImageFile(e.target.files[0], setBackBackgroundImage)} icon={Upload} />
         </div>
       </div>
@@ -182,7 +195,7 @@ const PhotoPanel = ({
       <div className="space-y-3">
         {photo && (
           <div className="w-24 h-32 mx-auto rounded-xl overflow-hidden border-2 border-blue-500">
-            <img src={photo.src} className="w-full h-full object-cover" alt="id photo" />
+            <img src={photo.src} className="w-full h-full object-cover" alt="id" />
           </div>
         )}
         <UploadBtn label="Upload Photo" onChange={e => e.target.files[0] && loadImageFile(e.target.files[0], setPhoto)} icon={ImageIcon} />
@@ -192,8 +205,7 @@ const PhotoPanel = ({
               className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" />
             {isProcessingPhoto
               ? <><Loader2 className="w-4 h-4 animate-spin text-blue-400" /><span className="text-[11px] font-black text-blue-400 uppercase">Processing…</span></>
-              : <><ScanFace className="w-4 h-4 text-blue-400" /><span className="text-[11px] font-black text-blue-400 uppercase">AI Remove BG</span></>
-            }
+              : <><ScanFace className="w-4 h-4 text-blue-400" /><span className="text-[11px] font-black text-blue-400 uppercase">AI Remove BG</span></>}
           </div>
           <button onClick={() => setShowCamera(true)} disabled={isProcessingPhoto}
             className="flex items-center justify-center gap-2 border border-dashed border-blue-500/40 bg-blue-500/5 rounded-2xl px-5 active:bg-blue-500/10 transition-colors disabled:opacity-40">
@@ -220,80 +232,109 @@ const PhotoPanel = ({
   </div>
 );
 
-// ─── Info Panel ───────────────────────────────────────────────────────────────
-const InfoPanel = ({ info, handleInputChange, genRandDL, genRandDD }) => (
-  <div className="space-y-4 pb-4">
-    <SectionCard title="ID Number & DOB">
-      <InputWithBtn label="DL Number" name="dlNo" value={info.dlNo} onChange={handleInputChange} btnLabel="GEN" onBtn={genRandDL} />
-      <div className="mt-3">
-        <Input label="Date of Birth" name="dob" value={info.dob} onChange={handleInputChange} type="date" />
-      </div>
-    </SectionCard>
+// ─── Info Panel — owns its own local state, debounces up to parent ─────────────
+const InfoPanel = ({ initialInfo, onInfoChange }) => {
+  const [f, setF] = useState(() => ({ ...initialInfo }));
+  const debounceRef = useRef(null);
 
-    <SectionCard title="Name">
-      <div className="grid grid-cols-2 gap-3">
-        <Input label="First Name" name="firstName" value={info.firstName} onChange={handleInputChange} />
-        <Input label="Last Name" name="lastName" value={info.lastName} onChange={handleInputChange} />
-      </div>
-      <div className="grid grid-cols-2 gap-3 mt-3">
-        <Input label="Middle Name" name="middleName" value={info.middleName} onChange={handleInputChange} />
-        <Input label="Suffix" name="suffix" value={info.suffix} onChange={handleInputChange} />
-      </div>
-    </SectionCard>
+  const commit = useCallback((next) => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => onInfoChange(next), 250);
+  }, [onInfoChange]);
 
-    <SectionCard title="Address">
-      <Input label="Street" name="address1" value={info.address1} onChange={handleInputChange} />
-      <div className="grid grid-cols-3 gap-3 mt-3">
-        <Input label="City" name="city" value={info.city} onChange={handleInputChange} className="col-span-2" />
-        <Input label="State" name="state" value={info.state} onChange={handleInputChange} />
-      </div>
-      <div className="mt-3">
-        <Input label="Zip" name="zip" value={info.zip} onChange={handleInputChange} />
-      </div>
-    </SectionCard>
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setF(prev => {
+      const next = { ...prev, [name]: value.toUpperCase() };
+      commit(next);
+      return next;
+    });
+  }, [commit]);
 
-    <SectionCard title="License Details">
-      <div className="grid grid-cols-3 gap-3">
-        <Input label="Class" name="class" value={info.class} onChange={handleInputChange} />
-        <Input label="End" name="end" value={info.end} onChange={handleInputChange} />
-        <Input label="Rest" name="rest" value={info.rest} onChange={handleInputChange} />
-      </div>
-      <div className="grid grid-cols-2 gap-3 mt-3">
-        <Input label="Issue Date" name="iss" value={info.iss} onChange={handleInputChange} type="date" />
-        <Input label="Exp Date" name="exp" value={info.exp} onChange={handleInputChange} type="date" />
-      </div>
-    </SectionCard>
+  const setField = useCallback((name, value) => {
+    setF(prev => {
+      const next = { ...prev, [name]: value };
+      commit(next);
+      return next;
+    });
+  }, [commit]);
 
-    <SectionCard title="Physical">
-      <div className="grid grid-cols-5 gap-2">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Sex</label>
-          <select name="sex" value={info.sex} onChange={handleInputChange}
-            className="bg-[#0f172a] border border-slate-700 rounded-xl px-2 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500">
-            <option value="1">M</option>
-            <option value="2">F</option>
-            <option value="9">X</option>
-          </select>
+  return (
+    <div className="space-y-4 pb-4">
+      <SectionCard title="ID Number & DOB">
+        <FieldWithBtn label="DL Number" name="dlNo" value={f.dlNo} onChange={handleChange}
+          btnLabel="GEN" onBtn={() => setField('dlNo', genDL())} />
+        <div className="mt-3">
+          <Field label="Date of Birth" name="dob" value={f.dob} onChange={handleChange} type="date" />
         </div>
-        <Input label="Ft" name="heightFeet" value={info.heightFeet} onChange={handleInputChange} />
-        <Input label="In" name="heightInches" value={info.heightInches} onChange={handleInputChange} />
-        <Input label="Wgt" name="wgt" value={info.wgt} onChange={handleInputChange} />
-        <Input label="Eyes" name="eyes" value={info.eyes} onChange={handleInputChange} />
-      </div>
-      <div className="grid grid-cols-2 gap-3 mt-3">
-        <Input label="Hair" name="hair" value={info.hair} onChange={handleInputChange} />
-        <Input label="Country" name="country" value={info.country} onChange={handleInputChange} />
-      </div>
-    </SectionCard>
+      </SectionCard>
 
-    <SectionCard title="Audit">
-      <InputWithBtn label="DD Code" name="dd" value={info.dd} onChange={handleInputChange} btnLabel="GEN" onBtn={genRandDD} />
-      <div className="mt-3">
-        <Input label="Compliance" name="compliance" value={info.compliance} onChange={handleInputChange} />
-      </div>
-    </SectionCard>
-  </div>
-);
+      <SectionCard title="Name">
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="First Name"  name="firstName"  value={f.firstName}  onChange={handleChange} />
+          <Field label="Last Name"   name="lastName"   value={f.lastName}   onChange={handleChange} />
+        </div>
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          <Field label="Middle Name" name="middleName" value={f.middleName} onChange={handleChange} />
+          <Field label="Suffix"      name="suffix"     value={f.suffix}     onChange={handleChange} />
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Address">
+        <Field label="Street" name="address1" value={f.address1} onChange={handleChange} />
+        <div className="grid grid-cols-3 gap-3 mt-3">
+          <Field label="City"  name="city"  value={f.city}  onChange={handleChange} className="col-span-2" />
+          <Field label="State" name="state" value={f.state} onChange={handleChange} />
+        </div>
+        <div className="mt-3">
+          <Field label="Zip" name="zip" value={f.zip} onChange={handleChange} />
+        </div>
+      </SectionCard>
+
+      <SectionCard title="License Details">
+        <div className="grid grid-cols-3 gap-3">
+          <Field label="Class" name="class" value={f.class} onChange={handleChange} />
+          <Field label="End"   name="end"   value={f.end}   onChange={handleChange} />
+          <Field label="Rest"  name="rest"  value={f.rest}  onChange={handleChange} />
+        </div>
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          <Field label="Issue Date" name="iss" value={f.iss} onChange={handleChange} type="date" />
+          <Field label="Exp Date"   name="exp" value={f.exp} onChange={handleChange} type="date" />
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Physical">
+        <div className="grid grid-cols-5 gap-2">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Sex</label>
+            <select name="sex" value={f.sex} onChange={handleChange}
+              className="bg-[#0f172a] border border-slate-700 rounded-xl px-2 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500">
+              <option value="1">M</option>
+              <option value="2">F</option>
+              <option value="9">X</option>
+            </select>
+          </div>
+          <Field label="Ft"   name="heightFeet"   value={f.heightFeet}   onChange={handleChange} />
+          <Field label="In"   name="heightInches" value={f.heightInches} onChange={handleChange} />
+          <Field label="Wgt"  name="wgt"          value={f.wgt}          onChange={handleChange} />
+          <Field label="Eyes" name="eyes"         value={f.eyes}         onChange={handleChange} />
+        </div>
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          <Field label="Hair"    name="hair"    value={f.hair}    onChange={handleChange} />
+          <Field label="Country" name="country" value={f.country} onChange={handleChange} />
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Audit">
+        <FieldWithBtn label="DD Code" name="dd" value={f.dd} onChange={handleChange}
+          btnLabel="GEN" onBtn={() => setField('dd', genDD())} />
+        <div className="mt-3">
+          <Field label="Compliance" name="compliance" value={f.compliance} onChange={handleChange} />
+        </div>
+      </SectionCard>
+    </div>
+  );
+};
 
 // ─── Batch Panel ──────────────────────────────────────────────────────────────
 const BatchPanel = ({ batchText, setBatchText, batchCount, setBatchCount, isBatching, onStart, onStop }) => (
@@ -303,9 +344,7 @@ const BatchPanel = ({ batchText, setBatchText, batchCount, setBatchCount, isBatc
         Format: FIRST:LAST:ADDRESS:CITY:STATE:ZIP:SSN:DOB
       </p>
       <textarea
-        value={batchText}
-        onChange={e => setBatchText(e.target.value)}
-        disabled={isBatching}
+        value={batchText} onChange={e => setBatchText(e.target.value)} disabled={isBatching}
         placeholder="CHRISTOPHER:JOHNSON:1841 PRINCETON CT:BIRMINGHAM:AL:35211:423-45-3249:9/1/1995"
         className="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-3 text-[13px] font-mono text-slate-300 outline-none focus:border-blue-500 h-36 resize-none"
       />
@@ -319,9 +358,8 @@ const BatchPanel = ({ batchText, setBatchText, batchCount, setBatchCount, isBatc
           />
         </div>
         {!isBatching
-          ? <button onClick={onStart} className="bg-green-600 active:bg-green-700 text-white font-black px-6 py-3.5 rounded-xl transition-colors shadow-lg active:scale-95">Start</button>
-          : <button onClick={onStop}  className="bg-red-600 text-white font-black px-6 py-3.5 rounded-xl animate-pulse active:scale-95">Stop</button>
-        }
+          ? <button onClick={onStart} className="bg-green-600 active:bg-green-700 text-white font-black px-6 py-3.5 rounded-xl active:scale-95">Start</button>
+          : <button onClick={onStop}  className="bg-red-600 text-white font-black px-6 py-3.5 rounded-xl animate-pulse active:scale-95">Stop</button>}
       </div>
     </SectionCard>
   </div>
@@ -329,8 +367,8 @@ const BatchPanel = ({ batchText, setBatchText, batchCount, setBatchCount, isBatc
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 const App = () => {
-  const canvasRef      = useRef(null);
-  const backCanvasRef  = useRef(null);
+  const canvasRef        = useRef(null);
+  const backCanvasRef    = useRef(null);
   const barcodeCanvasRef = useRef(null);
 
   const [backgroundImage,     setBackgroundImage]     = useState(null);
@@ -348,27 +386,18 @@ const App = () => {
   const [showCamera,  setShowCamera]  = useState(false);
   const [navTab,      setNavTab]      = useState('photo');
 
-  const [info, setInfo] = useState({
-    dlNo: '1234567890', dob: '1990-01-01',
-    lastName: 'DOE', firstName: 'JOHN', middleName: '', suffix: '',
-    address1: '123 Main St', city: 'ANYTOWN', state: 'NV', zip: '12345',
-    class: 'C', end: 'NONE', rest: 'NONE',
-    iss: '2025-04-14', exp: '2033-04-08',
-    sex: '1', heightFeet: '5', heightInches: '9', wgt: '180',
-    eyes: 'BLU', hair: 'BRN', dd: genDD(), country: 'USA', compliance: 'F',
-  });
+  // Canvas info — only updated from InfoPanel via debounce, not on every keypress
+  const [info, setInfo] = useState({ ...DEFAULT_INFO });
+  const infoRef = useRef(info);
 
-  const handleInputChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setInfo(prev => ({ ...prev, [name]: value.toUpperCase() }));
+  const handleInfoChange = useCallback((next) => {
+    infoRef.current = next;
+    setInfo(next);
   }, []);
-
-  const genRandDL  = useCallback(() => setInfo(p => ({ ...p, dlNo: Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join('') })), []);
-  const genRandDD  = useCallback(() => setInfo(p => ({ ...p, dd: genDD() })), []);
 
   const fmt = (d) => { if (!d) return ''; const [y, m, dd] = d.split('-'); return `${m}/${dd}/${y}`; };
 
-  const getDisplayInfo = (data = info) => ({
+  const getDisplayInfo = (data) => ({
     ...data,
     dob: fmt(data.dob), iss: fmt(data.iss), exp: fmt(data.exp),
     address2: `${data.city}, ${data.state} ${data.zip}`.toUpperCase(),
@@ -404,7 +433,7 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    drawCanvas(); generateBarcode(); drawBackCanvas();
+    drawCanvas(info); generateBarcode(info); drawBackCanvas(info);
   }, [info, backgroundImage, backBackgroundImage, photo, signature, referenceImage, showRef]);
 
   const drawImageFit = (ctx, img, x, y, w, h, fit = 'cover') => {
@@ -420,7 +449,7 @@ const App = () => {
     }
   };
 
-  const drawCanvas = (data = info) => {
+  const drawCanvas = (data) => {
     const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const di = getDisplayInfo(data);
@@ -438,18 +467,15 @@ const App = () => {
     if (!showRef) {
       ctx.textAlign = 'left';
       Object.keys(mapping).forEach(key => {
-        const f = mapping[key]; ctx.font = f.font; ctx.fillStyle = f.color || '#151515';
+        const field = mapping[key]; ctx.font = field.font; ctx.fillStyle = field.color || '#151515';
         let text = di[key];
-        if (key === 'bigDob') {
-          const p = di.dob.split('/');
-          text = p.length === 3 && p[2].length === 4 ? `${p[0]}/${p[1]}/${p[2].substring(2)}` : di.dob;
-        }
-        if (text) ctx.fillText(text, (f.x / 100) * canvas.width, (f.y / 100) * canvas.height);
+        if (key === 'bigDob') { const p = di.dob.split('/'); text = p.length === 3 && p[2].length === 4 ? `${p[0]}/${p[1]}/${p[2].substring(2)}` : di.dob; }
+        if (text) ctx.fillText(text, (field.x / 100) * canvas.width, (field.y / 100) * canvas.height);
       });
     }
   };
 
-  const drawBackCanvas = (data = info) => {
+  const drawBackCanvas = (data) => {
     const canvas = backCanvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const di = getDisplayInfo(data);
@@ -468,47 +494,46 @@ const App = () => {
     ctx.fillText(cap(di.rest), canvas.width * 0.461, canvas.height * 0.807);
   };
 
-  const generateBarcode = (data = info) => {
+  const generateBarcode = (data) => {
     if (!barcodeCanvasRef.current) return;
-    const fmtAAMVA = s => { if (!s) return ''; const [y, m, d] = s.split('-'); return `${m}${d}${y}`; };
-    const fmtHgt   = (ft, i) => `${((parseInt(ft) || 0) * 12 + (parseInt(i) || 0)).toString().padStart(3, '0')} in`;
-    const fmtZip   = z => { let c = z.replace(/\D/g, ''); return (c.length < 9 ? c.padEnd(9, '0') : c).slice(0, 9); };
+    const fmtA = s => { if (!s) return ''; const [y, m, d] = s.split('-'); return `${m}${d}${y}`; };
+    const fmtH = (ft, i) => `${((parseInt(ft)||0)*12+(parseInt(i)||0)).toString().padStart(3,'0')} in`;
+    const fmtZ = z => { let c = z.replace(/\D/g,''); return (c.length<9?c.padEnd(9,'0'):c).slice(0,9); };
     const p = {
       firstName: data.firstName.trim().toUpperCase(), middleName: data.middleName.trim().toUpperCase(),
-      lastName: data.lastName.trim().toUpperCase(), suffix: data.suffix, dob: fmtAAMVA(data.dob),
-      sex: data.sex, height: fmtHgt(data.heightFeet, data.heightInches), eyeColor: data.eyes,
+      lastName: data.lastName.trim().toUpperCase(), suffix: data.suffix, dob: fmtA(data.dob),
+      sex: data.sex, height: fmtH(data.heightFeet, data.heightInches), eyeColor: data.eyes,
       weight: data.wgt, address1: data.address1.trim().toUpperCase(), city: data.city.trim().toUpperCase(),
-      state: data.state, zip: fmtZip(data.zip), country: data.country,
-      dlNumber: data.dlNo.trim().toUpperCase(), issueDate: fmtAAMVA(data.iss), expDate: fmtAAMVA(data.exp),
-      vehClass: data.class, restrictions: data.rest.trim().toUpperCase(), endorsements: data.end.trim().toUpperCase(),
-      compliance: data.compliance, docDiscriminator: data.dd.trim(),
+      state: data.state, zip: fmtZ(data.zip), country: data.country,
+      dlNumber: data.dlNo.trim().toUpperCase(), issueDate: fmtA(data.iss), expDate: fmtA(data.exp),
+      vehClass: data.class, restrictions: data.rest.trim().toUpperCase(),
+      endorsements: data.end.trim().toUpperCase(), compliance: data.compliance,
+      docDiscriminator: data.dd.trim(),
     };
     let payload = 'DL';
     const mand = ['DCA','DCB','DCD','DBA','DCS','DAC','DAD','DBD','DBB','DBC','DAY','DAU','DAG','DAI','DAJ','DAK','DAQ','DCF','DCG','DDE','DDF','DDG'];
-    const add  = (id, val) => { let v = val; if (!v) { if (mand.includes(id)) v = 'NONE'; else return; } payload += `${id}${v}\n`; };
-    add('DAQ', p.dlNumber); add('DCS', p.lastName);    add('DDE', 'N');
-    add('DAC', p.firstName); add('DDF', 'N');           add('DAD', p.middleName);
-    add('DDG', 'N');          add('DCU', p.suffix);      add('DCA', p.vehClass);
-    add('DCB', p.restrictions); add('DCD', p.endorsements); add('DBD', p.issueDate);
-    add('DBB', p.dob);        add('DBA', p.expDate);    add('DBC', p.sex);
-    add('DAU', p.height);     add('DAY', p.eyeColor);   add('DAG', p.address1);
-    add('DAI', p.city);       add('DAJ', p.state);      add('DAK', p.zip);
-    add('DCF', p.docDiscriminator); add('DCG', p.country);
-    if (p.weight) add('DAW', p.weight.padStart(3, '0'));
-    add('DDA', p.compliance); add('DDB', p.issueDate);
-    payload = payload.slice(0, -1) + '\r';
-    const subLen = payload.length;
-    const header = `@\n\x1E\rANSI 636026110001DL0031${subLen.toString().padStart(4, '0')}`;
-    try {
-      bwipjs.toCanvas(barcodeCanvasRef.current, { bcid: 'pdf417', text: header + payload, columns: 9, scale: 3, eclevel: 5, includetext: false });
-    } catch (e) { console.error(e); }
+    const add = (id, val) => { let v=val; if(!v){if(mand.includes(id))v='NONE';else return;} payload+=`${id}${v}\n`; };
+    add('DAQ',p.dlNumber); add('DCS',p.lastName); add('DDE','N');
+    add('DAC',p.firstName); add('DDF','N'); add('DAD',p.middleName);
+    add('DDG','N'); add('DCU',p.suffix); add('DCA',p.vehClass);
+    add('DCB',p.restrictions); add('DCD',p.endorsements); add('DBD',p.issueDate);
+    add('DBB',p.dob); add('DBA',p.expDate); add('DBC',p.sex);
+    add('DAU',p.height); add('DAY',p.eyeColor); add('DAG',p.address1);
+    add('DAI',p.city); add('DAJ',p.state); add('DAK',p.zip);
+    add('DCF',p.docDiscriminator); add('DCG',p.country);
+    if (p.weight) add('DAW', p.weight.padStart(3,'0'));
+    add('DDA',p.compliance); add('DDB',p.issueDate);
+    payload = payload.slice(0,-1) + '\r';
+    const header = `@\n\x1E\rANSI 636026110001DL0031${payload.length.toString().padStart(4,'0')}`;
+    try { bwipjs.toCanvas(barcodeCanvasRef.current, { bcid:'pdf417', text:header+payload, columns:9, scale:3, eclevel:5, includetext:false }); }
+    catch(e) { console.error(e); }
   };
 
   const handleAdvancedPhotoUpload = useCallback(async (e) => {
     const file = e.target.files[0]; if (!file) return;
     setIsProcessingPhoto(true);
     try {
-      const blob = await removeBackground(file, { model: 'medium', output: { type: 'image/png', quality: 0.8 } });
+      const blob = await removeBackground(file, { model:'medium', output:{type:'image/png',quality:0.8} });
       loadImageFile(blob, img => { setPhoto(img); setIsProcessingPhoto(false); });
     } catch { setIsProcessingPhoto(false); loadImageFile(file, setPhoto); }
   }, []);
@@ -516,13 +541,14 @@ const App = () => {
   const handleCameraCapture = useCallback(async (blob) => {
     setIsProcessingPhoto(true);
     try {
-      const processed = await removeBackground(blob, { model: 'medium', output: { type: 'image/png', quality: 0.8 } });
+      const processed = await removeBackground(blob, { model:'medium', output:{type:'image/png',quality:0.8} });
       loadImageFile(processed, img => { setPhoto(img); setIsProcessingPhoto(false); });
     } catch { loadImageFile(blob, img => { setPhoto(img); setIsProcessingPhoto(false); }); }
   }, []);
 
   const dlBtn = (ref, name) => {
-    const a = document.createElement('a'); a.download = name; a.href = ref.current.toDataURL('image/png', 1.0); a.click();
+    const a = document.createElement('a'); a.download = name;
+    a.href = ref.current.toDataURL('image/png', 1.0); a.click();
   };
 
   const startBatch = async () => {
@@ -533,10 +559,10 @@ const App = () => {
     for (let i = 0; i < limit; i++) {
       if (abortBatchRef.current) break;
       const parts = lines[i].split(':'); if (parts.length < 8) continue;
-      const [rawFirst, last, , , , , ssn, dobRaw] = parts;
+      const [rawFirst, last,,,,, ssn, dobRaw] = parts;
       const fp = rawFirst.trim().split(' ');
-      const dDob = (() => { const dp = dobRaw.trim().split('/'); return dp.length === 3 && dp[2].length === 4 ? `${dp[2]}-${dp[0].padStart(2,'0')}-${dp[1].padStart(2,'0')}` : dobRaw.trim(); })();
-      const bI = { ...info, firstName: fp[0].toUpperCase(), middleName: fp.slice(1).join(' ').toUpperCase(), lastName: last.trim().toUpperCase(), dob: dDob, dlNo: Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)).join('') };
+      const dDob = (() => { const dp = dobRaw.trim().split('/'); return dp.length===3&&dp[2].length===4 ? `${dp[2]}-${dp[0].padStart(2,'0')}-${dp[1].padStart(2,'0')}` : dobRaw.trim(); })();
+      const bI = { ...infoRef.current, firstName:fp[0].toUpperCase(), middleName:fp.slice(1).join(' ').toUpperCase(), lastName:last.trim().toUpperCase(), dob:dDob, dlNo:genDL() };
       drawCanvas(bI); generateBarcode(bI); drawBackCanvas(bI);
       await new Promise(r => setTimeout(r, 500));
       dlBtn(canvasRef,     `${fp[0][0]}${last.trim()[0]}_${dDob.replace(/-/g,'')}_FRONT.png`);
@@ -548,9 +574,9 @@ const App = () => {
   };
 
   const navItems = [
-    { id: 'photo', label: 'Photo',  icon: Camera },
-    { id: 'info',  label: 'Info',   icon: ClipboardList },
-    { id: 'batch', label: 'Batch',  icon: Layers },
+    { id: 'photo', label: 'Photo', icon: Camera },
+    { id: 'info',  label: 'Info',  icon: ClipboardList },
+    { id: 'batch', label: 'Batch', icon: Layers },
   ];
 
   return (
@@ -574,11 +600,11 @@ const App = () => {
           </div>
           <div className="flex gap-2">
             <button onClick={() => dlBtn(canvasRef, 'NV_ID_FRONT.png')}
-              className="flex items-center gap-1.5 bg-blue-600 active:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-black text-sm transition-all active:scale-95 shadow-lg shadow-blue-900/30">
+              className="flex items-center gap-1.5 bg-blue-600 active:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-black text-sm active:scale-95 shadow-lg shadow-blue-900/30">
               <Download className="w-4 h-4" /><span>Front</span>
             </button>
             <button onClick={() => dlBtn(backCanvasRef, 'NV_ID_BACK.png')}
-              className="flex items-center gap-1.5 bg-[#1e293b] active:bg-[#334155] text-slate-300 px-4 py-2.5 rounded-xl font-black text-sm transition-all active:scale-95">
+              className="flex items-center gap-1.5 bg-[#1e293b] active:bg-[#334155] text-slate-300 px-4 py-2.5 rounded-xl font-black text-sm active:scale-95">
               <Download className="w-4 h-4" /><span>Back</span>
             </button>
           </div>
@@ -587,19 +613,19 @@ const App = () => {
         {/* ── Card Preview ── */}
         <div className="shrink-0 px-4 pt-3 pb-2">
           <div className="flex gap-2 mb-2.5">
-            {['front', 'back'].map(side => (
+            {['front','back'].map(side => (
               <button key={side} onClick={() => setCardSide(side)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-black text-sm transition-all ${cardSide === side ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-[#1e293b] text-slate-400'}`}>
-                {side === 'front' ? <UserCircle className="w-4 h-4" /> : <Barcode className="w-4 h-4" />}
-                {side === 'front' ? 'Front ID' : 'Back Barcode'}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-black text-sm transition-all ${cardSide===side ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-[#1e293b] text-slate-400'}`}>
+                {side==='front' ? <UserCircle className="w-4 h-4" /> : <Barcode className="w-4 h-4" />}
+                {side==='front' ? 'Front ID' : 'Back Barcode'}
               </button>
             ))}
           </div>
           <div className="bg-[#1e293b] p-2 rounded-2xl border border-slate-800 shadow-xl">
             <div className="relative aspect-[1000/630] rounded-xl overflow-hidden bg-[#0f172a]">
-              <canvas ref={canvasRef}     width={1000} height={630} className={`w-full h-full object-contain bg-white ${cardSide === 'front' ? 'block' : 'hidden'}`} />
-              <canvas ref={backCanvasRef} width={1000} height={630} className={`w-full h-full object-contain ${cardSide === 'back' ? 'block' : 'hidden'}`} />
-              <canvas ref={barcodeCanvasRef} style={{ display: 'none' }} />
+              <canvas ref={canvasRef}        width={1000} height={630} className={`w-full h-full object-contain bg-white ${cardSide==='front'?'block':'hidden'}`} />
+              <canvas ref={backCanvasRef}    width={1000} height={630} className={`w-full h-full object-contain ${cardSide==='back'?'block':'hidden'}`} />
+              <canvas ref={barcodeCanvasRef} style={{ display:'none' }} />
             </div>
           </div>
         </div>
@@ -608,39 +634,22 @@ const App = () => {
         <div className="flex-1 overflow-y-auto px-4 pt-2" style={{ WebkitOverflowScrolling: 'touch' }}>
           {navTab === 'photo' && (
             <PhotoPanel
-              backgroundImage={backgroundImage}
-              backBackgroundImage={backBackgroundImage}
-              photo={photo}
-              signature={signature}
-              referenceImage={referenceImage}
-              showRef={showRef}
-              isProcessingPhoto={isProcessingPhoto}
-              setShowCamera={setShowCamera}
-              setShowRef={setShowRef}
-              setPhoto={setPhoto}
-              setSignature={setSignature}
-              setBackgroundImage={setBackgroundImage}
-              setBackBackgroundImage={setBackBackgroundImage}
-              setReferenceImage={setReferenceImage}
+              backgroundImage={backgroundImage} backBackgroundImage={backBackgroundImage}
+              photo={photo} signature={signature} referenceImage={referenceImage} showRef={showRef}
+              isProcessingPhoto={isProcessingPhoto} setShowCamera={setShowCamera} setShowRef={setShowRef}
+              setPhoto={setPhoto} setSignature={setSignature} setBackgroundImage={setBackgroundImage}
+              setBackBackgroundImage={setBackBackgroundImage} setReferenceImage={setReferenceImage}
               handleAdvancedPhotoUpload={handleAdvancedPhotoUpload}
             />
           )}
           {navTab === 'info' && (
-            <InfoPanel
-              info={info}
-              handleInputChange={handleInputChange}
-              genRandDL={genRandDL}
-              genRandDD={genRandDD}
-            />
+            <InfoPanel initialInfo={DEFAULT_INFO} onInfoChange={handleInfoChange} />
           )}
           {navTab === 'batch' && (
             <BatchPanel
-              batchText={batchText}
-              setBatchText={setBatchText}
-              batchCount={batchCount}
-              setBatchCount={setBatchCount}
-              isBatching={isBatching}
-              onStart={startBatch}
+              batchText={batchText} setBatchText={setBatchText}
+              batchCount={batchCount} setBatchCount={setBatchCount}
+              isBatching={isBatching} onStart={startBatch}
               onStop={() => { abortBatchRef.current = true; }}
             />
           )}
@@ -651,8 +660,8 @@ const App = () => {
           style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
           {navItems.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setNavTab(id)}
-              className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-all active:scale-95 ${navTab === id ? 'text-blue-400' : 'text-slate-600'}`}>
-              <Icon className={`w-6 h-6 transition-transform ${navTab === id ? 'scale-110' : ''}`} />
+              className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-all active:scale-95 ${navTab===id ? 'text-blue-400' : 'text-slate-600'}`}>
+              <Icon className={`w-6 h-6 ${navTab===id?'scale-110':''}`} />
               <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
             </button>
           ))}
