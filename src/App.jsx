@@ -492,8 +492,8 @@ const App = () => {
     const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : '';
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#000';
     ctx.font = '700 20px Arial,Helvetica,sans-serif';
-    ctx.fillText(di.dob, canvas.width * 0.103, canvas.height * 0.107);
-    ctx.fillText(di.iss, canvas.width * 0.103, canvas.height * 0.148);
+    ctx.fillText(di.dob, canvas.width * 0.103, canvas.height * 0.127);
+    ctx.fillText(di.iss, canvas.width * 0.103, canvas.height * 0.168);
     ctx.font = '700 21px Arial,Helvetica,sans-serif';
     ctx.fillText(cap(di.end),  canvas.width * 0.486, canvas.height * 0.688);
     ctx.fillText(cap(di.rest), canvas.width * 0.461, canvas.height * 0.807);
