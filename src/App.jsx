@@ -27,13 +27,13 @@ const loadImageFile = (file, setter) => {
 };
 
 const DEFAULT_INFO = {
-  dlNo: '1234567890', dob: '1990-01-01',
-  lastName: 'DOE', firstName: 'JOHN', middleName: '', suffix: '',
-  address1: '123 Main St', city: 'ANYTOWN', state: 'NV', zip: '12345',
+  dlNo: '2105922245', dob: '1981-03-13',
+  lastName: 'VERZELLI', firstName: 'JOHN', middleName: 'JOSEPH', suffix: 'JR',
+  address1: '2573 PALMERA CIR', city: 'LAS VEGAS', state: 'NV', zip: '89121-4016',
   class: 'C', end: 'NONE', rest: 'NONE',
-  iss: '2025-04-14', exp: '2033-04-08',
-  sex: '1', heightFeet: '5', heightInches: '9', wgt: '180',
-  eyes: 'BLU', hair: 'BRN', dd: genDD(), country: 'USA', compliance: 'F',
+  iss: '2025-08-21', exp: '2036-03-13',
+  sex: '1', heightFeet: '5', heightInches: '7', wgt: '150',
+  eyes: 'BRO', hair: 'BLK', dd: '000112114830826797247', country: 'USA', compliance: 'F',
 };
 
 // ─── Reusable UI ──────────────────────────────────────────────────────────────
