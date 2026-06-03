@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Download, Upload, ShieldCheck, UserCircle,
   Eye, EyeOff, Barcode, ScanFace, Loader2,
-  Camera, ImageIcon, ClipboardList, Layers
+  Camera, ImageIcon, ClipboardList, Layers, ChevronDown
 } from 'lucide-react';
 import bwipjs from 'bwip-js';
 import { removeBackground } from '@imgly/background-removal';
@@ -37,12 +37,19 @@ const DEFAULT_INFO = {
 };
 
 // ─── Reusable UI ──────────────────────────────────────────────────────────────
-const SectionCard = ({ title, children }) => (
-  <div className="bg-[#1e293b] rounded-2xl p-4 border border-slate-800">
-    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">{title}</h3>
-    {children}
-  </div>
-);
+const SectionCard = ({ title, children, defaultOpen = true }) => {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden">
+      <button type="button" onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-4 active:bg-[#334155] transition-colors">
+        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</h3>
+        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && <div className="px-4 pb-4">{children}</div>}
+    </div>
+  );
+};
 
 const Field = ({ label, name, value, onChange, type = 'text', className = '' }) => (
   <div className={`flex flex-col gap-1.5 ${className}`}>
@@ -304,20 +311,22 @@ const InfoPanel = ({ initialInfo, onInfoChange }) => {
       </SectionCard>
 
       <SectionCard title="Physical">
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Sex</label>
             <select name="sex" value={f.sex} onChange={handleChange}
-              className="bg-[#0f172a] border border-slate-700 rounded-xl px-2 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500">
-              <option value="1">M</option>
-              <option value="2">F</option>
-              <option value="9">X</option>
+              className="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500">
+              <option value="1">M — Male</option>
+              <option value="2">F — Female</option>
+              <option value="9">X — Non-binary</option>
             </select>
           </div>
-          <Field label="Ft"   name="heightFeet"   value={f.heightFeet}   onChange={handleChange} />
-          <Field label="In"   name="heightInches" value={f.heightInches} onChange={handleChange} />
-          <Field label="Wgt"  name="wgt"          value={f.wgt}          onChange={handleChange} />
-          <Field label="Eyes" name="eyes"         value={f.eyes}         onChange={handleChange} />
+          <Field label="Weight (lbs)" name="wgt" value={f.wgt} onChange={handleChange} />
+        </div>
+        <div className="grid grid-cols-3 gap-3 mt-3">
+          <Field label="Height Ft" name="heightFeet"   value={f.heightFeet}   onChange={handleChange} />
+          <Field label="Height In" name="heightInches" value={f.heightInches} onChange={handleChange} />
+          <Field label="Eyes"      name="eyes"         value={f.eyes}         onChange={handleChange} />
         </div>
         <div className="grid grid-cols-2 gap-3 mt-3">
           <Field label="Hair"    name="hair"    value={f.hair}    onChange={handleChange} />
@@ -325,7 +334,7 @@ const InfoPanel = ({ initialInfo, onInfoChange }) => {
         </div>
       </SectionCard>
 
-      <SectionCard title="Audit">
+      <SectionCard title="Audit" defaultOpen={false}>
         <FieldWithBtn label="DD Code" name="dd" value={f.dd} onChange={handleChange}
           btnLabel="GEN" onBtn={() => setField('dd', genDD())} />
         <div className="mt-3">
@@ -339,7 +348,7 @@ const InfoPanel = ({ initialInfo, onInfoChange }) => {
 // ─── Batch Panel ──────────────────────────────────────────────────────────────
 const BatchPanel = ({ batchText, setBatchText, batchCount, setBatchCount, isBatching, onStart, onStop }) => (
   <div className="space-y-4 pb-4">
-    <SectionCard title="Batch Processing">
+    <SectionCard title="Batch Processing" defaultOpen={false}>
       <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-3">
         Format: FIRST:LAST:ADDRESS:CITY:STATE:ZIP:SSN:DOB
       </p>
