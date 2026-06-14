@@ -619,27 +619,30 @@ const App = () => {
         </header>
 
         {/* ── Card Preview ── */}
-        <div className="shrink-0 px-4 pt-3 pb-2">
-          <div className="flex gap-2 mb-2.5">
+        <div className="shrink-0 px-3 pt-2 pb-1">
+          <div className="flex gap-2 mb-1.5">
             {['front','back'].map(side => (
               <button key={side} onClick={() => setCardSide(side)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-black text-sm transition-all ${cardSide===side ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-[#1e293b] text-slate-400'}`}>
-                {side==='front' ? <UserCircle className="w-4 h-4" /> : <Barcode className="w-4 h-4" />}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl font-black text-xs transition-all ${cardSide===side ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-[#1e293b] text-slate-400'}`}>
+                {side==='front' ? <UserCircle className="w-3.5 h-3.5" /> : <Barcode className="w-3.5 h-3.5" />}
                 {side==='front' ? 'Front ID' : 'Back Barcode'}
               </button>
             ))}
           </div>
-          <div className="bg-[#1e293b] p-2 rounded-2xl border border-slate-800 shadow-xl">
-            <div className="relative aspect-[1000/630] rounded-xl overflow-hidden bg-[#0f172a]">
-              <canvas ref={canvasRef}        width={1000} height={630} className={`w-full h-full object-contain bg-white ${cardSide==='front'?'block':'hidden'}`} />
-              <canvas ref={backCanvasRef}    width={1000} height={630} className={`w-full h-full object-contain ${cardSide==='back'?'block':'hidden'}`} />
-              <canvas ref={barcodeCanvasRef} style={{ display:'none' }} />
+          <div className="flex justify-center">
+            <div className="bg-[#1e293b] p-1.5 rounded-2xl border border-slate-800 shadow-xl"
+              style={{ height: '140px', aspectRatio: '1000/630' }}>
+              <div className="relative rounded-xl overflow-hidden w-full h-full">
+                <canvas ref={canvasRef}        width={1000} height={630} className={`absolute inset-0 w-full h-full ${cardSide==='front'?'block':'hidden'}`} />
+                <canvas ref={backCanvasRef}    width={1000} height={630} className={`absolute inset-0 w-full h-full ${cardSide==='back'?'block':'hidden'}`} />
+                <canvas ref={barcodeCanvasRef} style={{ display:'none' }} />
+              </div>
             </div>
           </div>
         </div>
 
         {/* ── Scrollable Panel ── */}
-        <div className="flex-1 overflow-y-auto px-4 pt-2 pb-safe"
+        <div className="flex-1 overflow-y-auto px-3 pt-2"
           style={{ WebkitOverflowScrolling: 'touch', paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
           <PhotoPanel
             backgroundImage={backgroundImage} backBackgroundImage={backBackgroundImage}
