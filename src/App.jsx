@@ -53,26 +53,26 @@ const SectionCard = ({ title, children, defaultOpen = true }) => {
 
 const Field = ({ label, name, value, onChange, type = 'text', className = '' }) => (
   <div className={`flex flex-col gap-1.5 ${className}`}>
-    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{label}</label>
+    <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider">{label}</label>
     <input
       type={type} name={name} value={value} onChange={onChange}
       autoComplete="off" autoCorrect="off" spellCheck={false}
-      className="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none"
+      className="w-full bg-slate-900 border-2 border-slate-600 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none"
     />
   </div>
 );
 
 const FieldWithBtn = ({ label, name, value, onChange, btnLabel, onBtn }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{label}</label>
+    <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider">{label}</label>
     <div className="flex gap-2">
       <input
         type="text" name={name} value={value} onChange={onChange}
         autoComplete="off" autoCorrect="off" spellCheck={false}
-        className="flex-1 bg-[#0f172a] border border-slate-700 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+        className="flex-1 bg-slate-900 border-2 border-slate-600 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
       />
       <button type="button" onClick={onBtn}
-        className="bg-[#334155] hover:bg-[#475569] active:bg-[#1e293b] text-slate-200 text-[11px] font-black px-4 rounded-xl transition-colors shrink-0">
+        className="bg-blue-600 active:bg-blue-700 text-white text-[13px] font-black px-5 rounded-xl transition-colors shrink-0">
         {btnLabel}
       </button>
     </div>
@@ -315,7 +315,7 @@ const InfoPanel = ({ initialInfo, onInfoChange }) => {
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Sex</label>
             <select name="sex" value={f.sex} onChange={handleChange}
-              className="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500">
+              className="w-full bg-slate-900 border-2 border-slate-600 rounded-xl px-3 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500">
               <option value="1">M — Male</option>
               <option value="2">F — Female</option>
               <option value="9">X — Non-binary</option>
