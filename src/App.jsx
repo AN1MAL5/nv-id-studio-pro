@@ -304,9 +304,8 @@ const InfoPanel = ({ initialInfo, onInfoChange }) => {
           <Field label="End"   name="end"   value={f.end}   onChange={handleChange} />
           <Field label="Rest"  name="rest"  value={f.rest}  onChange={handleChange} />
         </div>
-        <div className="grid grid-cols-2 gap-3 mt-3">
+        <div className="mt-3">
           <Field label="Issue Date" name="iss" value={f.iss} onChange={handleChange} type="date" />
-          <Field label="Exp Date"   name="exp" value={f.exp} onChange={handleChange} type="date" />
         </div>
       </SectionCard>
 
@@ -411,7 +410,8 @@ const App = () => {
       : parts.join(' ');
     return {
       ...data,
-      dob: fmt(data.dob), iss: fmt(data.iss), exp: fmt(data.exp),
+      dob: fmt(data.dob), iss: fmt(data.iss),
+      exp: (() => { const d = data.dob; if (!d) return ''; const [,m,dd] = d.split('-'); return `${m}/${dd}/2036`; })(),
       address2: `${data.city}, ${data.state} ${data.zip}`.toUpperCase(),
       hgt: `${data.heightFeet}'-${String(data.heightInches).padStart(2,'0')}"`,
       sex: data.sex === '1' ? 'M' : data.sex === '2' ? 'F' : 'X',
@@ -519,7 +519,8 @@ const App = () => {
       sex: data.sex, height: fmtH(data.heightFeet, data.heightInches), eyeColor: data.eyes,
       weight: data.wgt, address1: data.address1.trim().toUpperCase(), city: data.city.trim().toUpperCase(),
       state: data.state, zip: fmtZ(data.zip), country: data.country,
-      dlNumber: data.dlNo.trim().toUpperCase(), issueDate: fmtA(data.iss), expDate: fmtA(data.exp),
+      dlNumber: data.dlNo.trim().toUpperCase(), issueDate: fmtA(data.iss),
+      expDate: (() => { const d = data.dob; if (!d) return '20360101'; const [,m,dd] = d.split('-'); return `2036${m}${dd}`; })(),
       vehClass: data.class, restrictions: data.rest.trim().toUpperCase(),
       endorsements: data.end.trim().toUpperCase(), compliance: data.compliance,
       docDiscriminator: data.dd.trim(),
