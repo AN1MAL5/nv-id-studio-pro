@@ -415,11 +415,11 @@ const BatchPanel = ({ batchText, setBatchText, batchCount, setBatchCount, isBatc
   <div className="space-y-4 pb-4">
     <SectionCard title="Batch Processing" defaultOpen={false}>
       <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-3">
-        Format: FIRST:LAST:ADDRESS:CITY:STATE:ZIP:SSN:DOB
+        Format: FIRST:LAST:ADDRESS:CITY:STATE:ZIP:DOB
       </p>
       <textarea
         value={batchText} onChange={e => setBatchText(e.target.value)} disabled={isBatching}
-        placeholder="CHRISTOPHER:JOHNSON:1841 PRINCETON CT:BIRMINGHAM:AL:35211:423-45-3249:9/1/1995"
+        placeholder="JOHN:DOE:123 MAIN ST:LAS VEGAS:NV:89101:1/1/1990"
         className="w-full bg-[#0f172a] border border-slate-700 rounded-xl px-3 py-3 text-[13px] font-mono text-slate-300 outline-none focus:border-blue-500 h-36 resize-none"
       />
       <div className="flex gap-3 items-end mt-3">
@@ -639,16 +639,16 @@ const App = () => {
     const limit = Math.min(batchCount, lines.length);
     for (let i = 0; i < limit; i++) {
       if (abortBatchRef.current) break;
-      const parts = lines[i].split(':'); if (parts.length < 8) continue;
-      const [rawFirst, last,,,,, ssn, dobRaw] = parts;
+      const parts = lines[i].split(':'); if (parts.length < 7) continue;
+      const [rawFirst, last, address1, city, state, zip, dobRaw] = parts;
       const fp = rawFirst.trim().split(' ');
       const dDob = (() => { const dp = dobRaw.trim().split('/'); return dp.length===3&&dp[2].length===4 ? `${dp[2]}-${dp[0].padStart(2,'0')}-${dp[1].padStart(2,'0')}` : dobRaw.trim(); })();
-      const bI = { ...infoRef.current, firstName:fp[0].toUpperCase(), middleName:fp.slice(1).join(' ').toUpperCase(), lastName:last.trim().toUpperCase(), dob:dDob, dlNo:genDL() };
+      const bI = { ...infoRef.current, firstName:fp[0].toUpperCase(), middleName:fp.slice(1).join(' ').toUpperCase(), lastName:last.trim().toUpperCase(), address1:address1.trim().toUpperCase(), city:city.trim().toUpperCase(), state:state.trim().toUpperCase(), zip:zip.trim(), dob:dDob, dlNo:genDL() };
       drawCanvas(bI); generateBarcode(bI); drawBackCanvas(bI);
       await new Promise(r => setTimeout(r, 500));
-      dlBtn(canvasRef,     `${fp[0][0]}${last.trim()[0]}_${dDob.replace(/-/g,'')}_FRONT.png`);
+      dlBtn(canvasRef,     `${fp[0].toUpperCase()}_${last.trim().toUpperCase()}_${dDob.replace(/-/g,'')}_FRONT.png`);
       await new Promise(r => setTimeout(r, 800));
-      dlBtn(backCanvasRef, `${fp[0][0]}${last.trim()[0]}_${ssn.trim().replace(/-/g,'')}_BACK.png`);
+      dlBtn(backCanvasRef, `${fp[0].toUpperCase()}_${last.trim().toUpperCase()}_${dDob.replace(/-/g,'')}_BACK.png`);
       await new Promise(r => setTimeout(r, 1500));
     }
     setIsBatching(false);
