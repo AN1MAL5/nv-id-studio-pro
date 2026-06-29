@@ -806,20 +806,21 @@ const App = () => {
         </header>
 
         {/* ── Card Preview ── */}
-        <div className="shrink-0 px-3 pt-2 pb-1">
-          <div className="flex gap-2 mb-1.5">
-            {['front','back'].map(side => (
-              <button key={side} onClick={() => setCardSide(side)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm transition-all active:opacity-80"
-                style={{ background: cardSide===side ? T.accent : T.card, color: cardSide===side ? '#fff' : T.muted }}>
-                {side==='front' ? <UserCircle className="w-4 h-4" /> : <Barcode className="w-4 h-4" />}
-                {side==='front' ? 'Front ID' : 'Back Barcode'}
-              </button>
-            ))}
-          </div>
-          <div className="flex justify-center">
-            <div className="p-1.5 rounded-2xl shadow-xl"
-              style={{ height: '140px', aspectRatio: '1000/630', background: T.card }}>
+        <div className="shrink-0 px-4 pt-3 pb-2 flex flex-col items-center">
+          {/* Constrain to ~1 column width on desktop, full width on mobile */}
+          <div className="w-full" style={{ maxWidth: 'min(calc((100vw - 32px) / 3), 480px)' }}>
+            <div className="flex gap-2 mb-2">
+              {['front','back'].map(side => (
+                <button key={side} onClick={() => setCardSide(side)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm transition-all active:opacity-80"
+                  style={{ background: cardSide===side ? T.accent : T.card, color: cardSide===side ? '#fff' : T.muted }}>
+                  {side==='front' ? <UserCircle className="w-4 h-4" /> : <Barcode className="w-4 h-4" />}
+                  {side==='front' ? 'Front ID' : 'Back Barcode'}
+                </button>
+              ))}
+            </div>
+            <div className="p-1.5 rounded-2xl shadow-xl w-full"
+              style={{ aspectRatio: '1000/630', background: T.card }}>
               <div className="relative rounded-xl overflow-hidden w-full h-full">
                 <canvas ref={canvasRef}        width={1000} height={630} className={`absolute inset-0 w-full h-full ${cardSide==='front'?'block':'hidden'}`} />
                 <canvas ref={backCanvasRef}    width={1000} height={630} className={`absolute inset-0 w-full h-full ${cardSide==='back'?'block':'hidden'}`} />
