@@ -115,6 +115,87 @@ const Section = ({ title, children }) => (
   </div>
 );
 
+// ─── Signature Pad ────────────────────────────────────────────────────────────
+const SignaturePad = ({ onSave }) => {
+  const padRef = useRef(null);
+  const drawing = useRef(false);
+  const lastPos = useRef(null);
+  const [hasStrokes, setHasStrokes] = useState(false);
+
+  const getPos = (e, canvas) => {
+    const rect = canvas.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return {
+      x: (src.clientX - rect.left) * (canvas.width  / rect.width),
+      y: (src.clientY - rect.top)  * (canvas.height / rect.height),
+    };
+  };
+
+  const startDraw = (e) => {
+    e.preventDefault();
+    const canvas = padRef.current;
+    drawing.current = true;
+    lastPos.current = getPos(e, canvas);
+  };
+
+  const draw = (e) => {
+    e.preventDefault();
+    if (!drawing.current) return;
+    const canvas = padRef.current;
+    const ctx = canvas.getContext('2d');
+    const pos = getPos(e, canvas);
+    ctx.beginPath();
+    ctx.moveTo(lastPos.current.x, lastPos.current.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    lastPos.current = pos;
+    setHasStrokes(true);
+  };
+
+  const stopDraw = () => { drawing.current = false; };
+
+  const clear = () => {
+    const canvas = padRef.current;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasStrokes(false);
+  };
+
+  const save = () => {
+    const canvas = padRef.current;
+    const img = new Image();
+    img.onload = () => onSave(img);
+    img.src = canvas.toDataURL('image/png');
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <canvas ref={padRef} width={600} height={180}
+        className="w-full rounded-xl touch-none cursor-crosshair"
+        style={{ background: '#1a1a2e', border: `1px solid ${T.border}` }}
+        onMouseDown={startDraw} onMouseMove={draw} onMouseUp={stopDraw} onMouseLeave={stopDraw}
+        onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={stopDraw}
+      />
+      <div className="flex gap-2">
+        <button type="button" onClick={clear}
+          className="flex-1 py-2 rounded-lg text-[12px] font-bold transition-colors active:opacity-70"
+          style={{ background: '#252538', color: T.muted, border: `1px solid ${T.border}` }}>
+          Clear
+        </button>
+        <button type="button" onClick={save} disabled={!hasStrokes}
+          className="flex-1 py-2 rounded-lg text-[12px] font-bold text-white transition-colors active:opacity-70 disabled:opacity-40"
+          style={{ background: T.accent }}>
+          Use Signature
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ─── Camera Capture Modal ─────────────────────────────────────────────────────
 const CameraCapture = ({ onCapture, onClose }) => {
   const videoRef = useRef(null);
@@ -343,20 +424,12 @@ const InfoPanel = ({
 
           <Section title="Signature">
             {signature && (
-              <div className="w-full h-20 rounded-xl overflow-hidden mb-3 flex items-center justify-center bg-white">
-                <img src={signature.src} className="max-w-full max-h-full object-contain" alt="sig" />
+              <div className="w-full h-16 rounded-xl overflow-hidden mb-3 flex items-center justify-center"
+                style={{ background: '#1a1a2e', border: `1px solid ${T.border}` }}>
+                <img src={signature.src} className="max-h-full object-contain" alt="sig" />
               </div>
             )}
-            <div className="rounded-xl h-32 flex items-center justify-center relative"
-              style={{ background: '#1a1a2e', border: `1px solid ${T.border}` }}>
-              <input type="file" accept="image/*"
-                onChange={e => e.target.files[0] && loadImageFile(e.target.files[0], setSignature)}
-                className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" />
-              <div className="flex flex-col items-center gap-2">
-                <Upload className="w-5 h-5" style={{ color: T.muted }} />
-                <span className="text-[12px] font-semibold" style={{ color: T.muted }}>Upload Signature</span>
-              </div>
-            </div>
+            <SignaturePad onSave={setSignature} />
           </Section>
 
           <Section title="Audit">
