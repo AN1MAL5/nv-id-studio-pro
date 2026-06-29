@@ -36,15 +36,27 @@ const DEFAULT_INFO = {
   eyes: 'BRO', hair: 'BLK', dd: '000112114830826797247', country: 'USA', compliance: 'F',
 };
 
+// ─── Theme tokens ─────────────────────────────────────────────────────────────
+const T = {
+  bg:      '#12121e',   // app background
+  card:    '#1c1c2e',   // input / card surface
+  accent:  '#5c5ef7',   // vivid indigo-blue buttons
+  accentH: '#4a4ce0',   // hover
+  label:   '#ffffff',   // label text
+  muted:   '#8888aa',   // placeholder / chevron
+  border:  '#2a2a42',   // subtle border
+};
+
 // ─── Reusable UI ──────────────────────────────────────────────────────────────
 const SectionCard = ({ title, children, defaultOpen = true }) => {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-[#1e293b] rounded-2xl border border-slate-800 overflow-hidden">
+    <div className="rounded-2xl overflow-hidden" style={{ background: T.card }}>
       <button type="button" onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-4 active:bg-[#334155] transition-colors">
-        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{title}</h3>
-        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        className="w-full flex items-center justify-between px-4 py-4 transition-colors"
+        style={{ background: 'transparent' }}>
+        <h3 className="text-[13px] font-bold" style={{ color: T.label }}>{title}</h3>
+        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} style={{ color: T.muted }} />
       </button>
       {open && <div className="px-4 pb-4">{children}</div>}
     </div>
@@ -53,26 +65,33 @@ const SectionCard = ({ title, children, defaultOpen = true }) => {
 
 const Field = ({ label, name, value, onChange, type = 'text', className = '' }) => (
   <div className={`flex flex-col gap-1.5 ${className}`}>
-    <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider">{label}</label>
+    <label className="text-[13px] font-semibold" style={{ color: T.label }}>{label}</label>
     <input
       type={type} name={name} value={value} onChange={onChange}
       autoComplete="off" autoCorrect="off" spellCheck={false}
-      className="w-full bg-slate-900 border-2 border-slate-600 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none"
+      className="w-full rounded-lg px-4 py-3 text-[14px] font-medium text-white outline-none transition-all appearance-none"
+      style={{ background: '#252538', border: `1px solid ${T.border}` }}
+      onFocus={e => e.target.style.borderColor = T.accent}
+      onBlur={e => e.target.style.borderColor = T.border}
     />
   </div>
 );
 
 const FieldWithBtn = ({ label, name, value, onChange, btnLabel, onBtn }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider">{label}</label>
+    <label className="text-[13px] font-semibold" style={{ color: T.label }}>{label}</label>
     <div className="flex gap-2">
       <input
         type="text" name={name} value={value} onChange={onChange}
         autoComplete="off" autoCorrect="off" spellCheck={false}
-        className="flex-1 bg-slate-900 border-2 border-slate-600 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+        className="flex-1 rounded-lg px-4 py-3 text-[14px] font-medium text-white outline-none transition-all"
+        style={{ background: '#252538', border: `1px solid ${T.border}` }}
+        onFocus={e => e.target.style.borderColor = T.accent}
+        onBlur={e => e.target.style.borderColor = T.border}
       />
       <button type="button" onClick={onBtn}
-        className="bg-blue-600 active:bg-blue-700 text-white text-[13px] font-black px-5 rounded-xl transition-colors shrink-0">
+        className="text-white text-[13px] font-bold px-5 rounded-lg transition-colors shrink-0 active:opacity-80"
+        style={{ background: T.accent }}>
         {btnLabel}
       </button>
     </div>
@@ -80,11 +99,12 @@ const FieldWithBtn = ({ label, name, value, onChange, btnLabel, onBtn }) => (
 );
 
 const UploadBtn = ({ label, onChange, icon: Icon }) => (
-  <div className="relative flex items-center justify-center gap-2 border border-slate-700 rounded-2xl p-4 bg-[#0f172a] active:bg-[#1e293b] transition-colors">
+  <div className="relative flex items-center justify-center gap-2 rounded-lg p-4 transition-colors active:opacity-70"
+    style={{ background: '#252538', border: `1px solid ${T.border}` }}>
     <input type="file" onChange={onChange} accept="image/*"
       className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" />
-    {Icon && <Icon className="w-4 h-4 text-slate-400" />}
-    <span className="text-[11px] font-black text-slate-400 uppercase">{label}</span>
+    {Icon && <Icon className="w-4 h-4" style={{ color: T.muted }} />}
+    <span className="text-[12px] font-semibold" style={{ color: T.muted }}>{label}</span>
   </div>
 );
 
@@ -312,9 +332,10 @@ const InfoPanel = ({ initialInfo, onInfoChange }) => {
       <SectionCard title="Physical">
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Sex</label>
+            <label className="text-[13px] font-semibold" style={{ color: T.label }}>Sex</label>
             <select name="sex" value={f.sex} onChange={handleChange}
-              className="w-full bg-slate-900 border-2 border-slate-600 rounded-xl px-3 py-3.5 text-[15px] font-bold text-white outline-none focus:border-blue-500">
+              className="w-full rounded-lg px-3 py-3 text-[14px] font-medium text-white outline-none appearance-none"
+              style={{ background: '#252538', border: `1px solid ${T.border}` }}>
               <option value="1">M — Male</option>
               <option value="2">F — Female</option>
               <option value="9">X — Non-binary</option>
@@ -592,8 +613,8 @@ const App = () => {
     <>
       {showCamera && <CameraCapture onCapture={handleCameraCapture} onClose={() => setShowCamera(false)} />}
 
-      <div className="flex flex-col bg-[#0f172a] text-slate-200 font-sans"
-        style={{ height: '100dvh', overscrollBehavior: 'none' }}>
+      <div className="flex flex-col text-white font-sans"
+        style={{ height: '100dvh', overscrollBehavior: 'none', background: T.bg }}>
 
         {/* ── Header ── */}
         <header className="shrink-0 relative overflow-hidden"
@@ -624,15 +645,16 @@ const App = () => {
           <div className="flex gap-2 mb-1.5">
             {['front','back'].map(side => (
               <button key={side} onClick={() => setCardSide(side)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-black text-sm transition-all ${cardSide===side ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-[#1e293b] text-slate-400'}`}>
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm transition-all active:opacity-80"
+                style={{ background: cardSide===side ? T.accent : T.card, color: cardSide===side ? '#fff' : T.muted }}>
                 {side==='front' ? <UserCircle className="w-4 h-4" /> : <Barcode className="w-4 h-4" />}
                 {side==='front' ? 'Front ID' : 'Back Barcode'}
               </button>
             ))}
           </div>
           <div className="flex justify-center">
-            <div className="bg-[#1e293b] p-1.5 rounded-2xl border border-slate-800 shadow-xl"
-              style={{ height: '140px', aspectRatio: '1000/630' }}>
+            <div className="p-1.5 rounded-2xl shadow-xl"
+              style={{ height: '140px', aspectRatio: '1000/630', background: T.card }}>
               <div className="relative rounded-xl overflow-hidden w-full h-full">
                 <canvas ref={canvasRef}        width={1000} height={630} className={`absolute inset-0 w-full h-full ${cardSide==='front'?'block':'hidden'}`} />
                 <canvas ref={backCanvasRef}    width={1000} height={630} className={`absolute inset-0 w-full h-full ${cardSide==='back'?'block':'hidden'}`} />
