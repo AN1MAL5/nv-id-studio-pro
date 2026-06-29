@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Download, Upload, ShieldCheck, UserCircle,
   Eye, EyeOff, Barcode, ScanFace, Loader2,
-  Camera, ImageIcon, ClipboardList, Layers, ChevronDown
+  Camera, ImageIcon, ClipboardList, Layers, ChevronDown,
+  Settings, X
 } from 'lucide-react';
 import bwipjs from 'bwip-js';
 import { removeBackground } from '@imgly/background-removal';
@@ -530,7 +531,8 @@ const App = () => {
   const abortBatchRef = useRef(false);
   const [cardSide,    setCardSide]    = useState('front');
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
-  const [showCamera,  setShowCamera]  = useState(false);
+  const [showCamera,   setShowCamera]   = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   // Canvas info — only updated from InfoPanel via debounce, not on every keypress
   const [info, setInfo] = useState({ ...DEFAULT_INFO });
   const infoRef = useRef(info);
@@ -731,6 +733,45 @@ const App = () => {
     <>
       {showCamera && <CameraCapture onCapture={handleCameraCapture} onClose={() => setShowCamera(false)} />}
 
+      {/* ── Advanced Side Drawer ── */}
+      {showAdvanced && (
+        <div className="fixed inset-0 z-40 flex justify-end" onClick={() => setShowAdvanced(false)}>
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} />
+          <div className="relative z-50 flex flex-col overflow-y-auto w-80 h-full shadow-2xl"
+            style={{ background: T.bg, borderLeft: `2px solid ${T.border}` }}
+            onClick={e => e.stopPropagation()}>
+            {/* Drawer header */}
+            <div className="flex items-center justify-between px-4 py-4 shrink-0"
+              style={{ borderBottom: `1px solid ${T.border}` }}>
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4" style={{ color: T.muted }} />
+                <span className="text-[13px] font-bold" style={{ color: T.label }}>Advanced</span>
+              </div>
+              <button onClick={() => setShowAdvanced(false)}
+                className="p-1.5 rounded-lg active:opacity-60 transition-opacity"
+                style={{ background: '#252538' }}>
+                <X className="w-4 h-4" style={{ color: T.muted }} />
+              </button>
+            </div>
+            {/* Drawer content */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+              <PhotoPanel
+                backgroundImage={backgroundImage} backBackgroundImage={backBackgroundImage}
+                referenceImage={referenceImage} showRef={showRef}
+                setShowRef={setShowRef} setBackgroundImage={setBackgroundImage}
+                setBackBackgroundImage={setBackBackgroundImage} setReferenceImage={setReferenceImage}
+              />
+              <BatchPanel
+                batchText={batchText} setBatchText={setBatchText}
+                batchCount={batchCount} setBatchCount={setBatchCount}
+                isBatching={isBatching} onStart={startBatch}
+                onStop={() => { abortBatchRef.current = true; }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col text-white font-sans"
         style={{ height: '100dvh', overscrollBehavior: 'none', background: T.bg }}>
 
@@ -743,7 +784,13 @@ const App = () => {
           <div className="relative flex items-center justify-between px-3 pb-2">
             {/* Nevada logo */}
             <img src="/nevada-logo.png" alt="Nevada 2026" className="h-10 object-contain" style={{ filter: 'drop-shadow(0 0 6px rgba(77,208,225,0.4))' }} />
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <button onClick={() => setShowAdvanced(v => !v)}
+                className="p-2 rounded-xl active:opacity-70 transition-opacity"
+                style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
+                title="Advanced">
+                <Settings className="w-4 h-4 text-white opacity-60" />
+              </button>
               <button onClick={() => dlBtn(canvasRef, 'NV_ID_FRONT.png')}
                 className="flex items-center gap-1.5 text-white px-4 py-2 rounded-xl font-black text-sm active:scale-95 shadow-lg"
                 style={{ background: 'linear-gradient(135deg,#006064,#0097a7)', boxShadow: '0 2px 12px rgba(0,150,167,0.4)' }}>
@@ -790,18 +837,6 @@ const App = () => {
             photo={photo} signature={signature} isProcessingPhoto={isProcessingPhoto}
             setShowCamera={setShowCamera} setPhoto={setPhoto} setSignature={setSignature}
             handleAdvancedPhotoUpload={handleAdvancedPhotoUpload}
-          />
-          <PhotoPanel
-            backgroundImage={backgroundImage} backBackgroundImage={backBackgroundImage}
-            referenceImage={referenceImage} showRef={showRef}
-            setShowRef={setShowRef} setBackgroundImage={setBackgroundImage}
-            setBackBackgroundImage={setBackBackgroundImage} setReferenceImage={setReferenceImage}
-          />
-          <BatchPanel
-            batchText={batchText} setBatchText={setBatchText}
-            batchCount={batchCount} setBatchCount={setBatchCount}
-            isBatching={isBatching} onStart={startBatch}
-            onStop={() => { abortBatchRef.current = true; }}
           />
         </div>
       </div>
