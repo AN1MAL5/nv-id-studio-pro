@@ -27,13 +27,13 @@ const loadImageFile = (file, setter) => {
 };
 
 const DEFAULT_INFO = {
-  dlNo: '2105922245', dob: '1981-03-13',
-  lastName: 'VERZELLI', firstName: 'JOHN', middleName: 'JOSEPH', suffix: 'JR',
-  address1: '2573 PALMERA CIR', city: 'LAS VEGAS', state: 'NV', zip: '89121-4016',
+  dlNo: '1234567890', dob: '1990-01-01',
+  lastName: 'DOE', firstName: 'JOHN', middleName: '', suffix: '',
+  address1: '123 MAIN ST', city: 'LAS VEGAS', state: 'NV', zip: '89101',
   class: 'C', end: 'NONE', rest: 'NONE',
-  iss: '2025-08-21', exp: '2036-03-13',
-  sex: '1', heightFeet: '5', heightInches: '7', wgt: '150',
-  eyes: 'BRO', hair: 'BLK', dd: '000112114830826797247', country: 'USA', compliance: 'F',
+  iss: '2025-01-01', exp: '2036-01-01',
+  sex: '1', heightFeet: '5', heightInches: '10', wgt: '175',
+  eyes: 'BRO', hair: 'BRN', dd: '0001234567890000000000', country: 'USA', compliance: 'F',
 };
 
 // ─── Theme tokens ─────────────────────────────────────────────────────────────
@@ -105,6 +105,13 @@ const UploadBtn = ({ label, onChange, icon: Icon }) => (
       className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" />
     {Icon && <Icon className="w-4 h-4" style={{ color: T.muted }} />}
     <span className="text-[12px] font-semibold" style={{ color: T.muted }}>{label}</span>
+  </div>
+);
+
+const Section = ({ title, children }) => (
+  <div>
+    <p className="text-[13px] font-bold mb-3" style={{ color: T.label }}>{title}</p>
+    {children}
   </div>
 );
 
@@ -198,59 +205,31 @@ const CameraCapture = ({ onCapture, onClose }) => {
 
 // ─── Photo Panel ──────────────────────────────────────────────────────────────
 const PhotoPanel = ({
-  backgroundImage, backBackgroundImage, photo, signature, referenceImage, showRef,
-  isProcessingPhoto, setShowCamera, setShowRef, setPhoto, setSignature,
-  setBackgroundImage, setBackBackgroundImage, setReferenceImage, handleAdvancedPhotoUpload,
+  backgroundImage, backBackgroundImage, referenceImage, showRef,
+  setShowRef, setBackgroundImage, setBackBackgroundImage, setReferenceImage,
 }) => (
   <div className="space-y-4 pb-4">
-    <SectionCard title="Templates">
+    <SectionCard title="Templates" defaultOpen={false}>
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-2">
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Front</p>
-          {backgroundImage && <img src={backgroundImage.src} className="w-full aspect-[1000/630] object-cover rounded-xl opacity-80 border border-slate-700" alt="front" />}
+          <p className="text-[11px] font-semibold" style={{ color: T.muted }}>Front</p>
+          {backgroundImage && <img src={backgroundImage.src} className="w-full aspect-[1000/630] object-cover rounded-xl opacity-80" alt="front" />}
           <UploadBtn label="Replace" onChange={e => e.target.files[0] && loadImageFile(e.target.files[0], setBackgroundImage)} icon={Upload} />
         </div>
         <div className="flex flex-col gap-2">
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Back</p>
-          {backBackgroundImage && <img src={backBackgroundImage.src} className="w-full aspect-[1000/630] object-cover rounded-xl opacity-80 border border-slate-700" alt="back" />}
+          <p className="text-[11px] font-semibold" style={{ color: T.muted }}>Back</p>
+          {backBackgroundImage && <img src={backBackgroundImage.src} className="w-full aspect-[1000/630] object-cover rounded-xl opacity-80" alt="back" />}
           <UploadBtn label="Replace" onChange={e => e.target.files[0] && loadImageFile(e.target.files[0], setBackBackgroundImage)} icon={Upload} />
         </div>
       </div>
     </SectionCard>
 
-    <SectionCard title="Photo">
-      <div className="space-y-3">
-        {photo && (
-          <div className="w-24 h-32 mx-auto rounded-xl overflow-hidden border-2 border-blue-500">
-            <img src={photo.src} className="w-full h-full object-cover" alt="id" />
-          </div>
-        )}
-        <UploadBtn label="Upload Photo" onChange={e => e.target.files[0] && loadImageFile(e.target.files[0], setPhoto)} icon={ImageIcon} />
-        <div className="flex gap-3">
-          <div className="relative flex-1 flex items-center justify-center gap-2 border border-dashed border-blue-500/40 bg-blue-500/5 rounded-2xl p-3.5 active:bg-blue-500/10 transition-colors">
-            <input type="file" accept="image/*" onChange={handleAdvancedPhotoUpload} disabled={isProcessingPhoto}
-              className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" />
-            {isProcessingPhoto
-              ? <><Loader2 className="w-4 h-4 animate-spin text-blue-400" /><span className="text-[11px] font-black text-blue-400 uppercase">Processing…</span></>
-              : <><ScanFace className="w-4 h-4 text-blue-400" /><span className="text-[11px] font-black text-blue-400 uppercase">AI Remove BG</span></>}
-          </div>
-          <button onClick={() => setShowCamera(true)} disabled={isProcessingPhoto}
-            className="flex items-center justify-center gap-2 border border-dashed border-blue-500/40 bg-blue-500/5 rounded-2xl px-5 active:bg-blue-500/10 transition-colors disabled:opacity-40">
-            {isProcessingPhoto ? <Loader2 className="w-5 h-5 animate-spin text-blue-400" /> : <Camera className="w-5 h-5 text-blue-400" />}
-          </button>
-        </div>
-      </div>
-    </SectionCard>
-
-    <SectionCard title="Signature">
-      <UploadBtn label="Upload Signature" onChange={e => e.target.files[0] && loadImageFile(e.target.files[0], setSignature)} icon={Upload} />
-    </SectionCard>
-
-    <SectionCard title="Reference / Alignment">
+    <SectionCard title="Reference / Alignment" defaultOpen={false}>
       <UploadBtn label="Upload Reference" onChange={e => e.target.files[0] && loadImageFile(e.target.files[0], setReferenceImage)} icon={Upload} />
       {referenceImage && (
         <button onClick={() => setShowRef(v => !v)}
-          className={`mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all ${showRef ? 'bg-amber-500 text-black' : 'bg-[#0f172a] text-slate-400 border border-slate-700'}`}>
+          className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all"
+          style={{ background: showRef ? '#f59e0b' : '#252538', color: showRef ? '#000' : T.muted, border: `1px solid ${T.border}` }}>
           {showRef ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           {showRef ? 'Hide Overlay' : 'Show Overlay'}
         </button>
@@ -260,7 +239,11 @@ const PhotoPanel = ({
 );
 
 // ─── Info Panel — owns its own local state, debounces up to parent ─────────────
-const InfoPanel = ({ initialInfo, onInfoChange }) => {
+const InfoPanel = ({
+  initialInfo, onInfoChange,
+  photo, signature, isProcessingPhoto,
+  setShowCamera, setPhoto, setSignature, handleAdvancedPhotoUpload,
+}) => {
   const [f, setF] = useState(() => ({ ...initialInfo }));
   const debounceRef = useRef(null);
 
@@ -286,81 +269,143 @@ const InfoPanel = ({ initialInfo, onInfoChange }) => {
     });
   }, [commit]);
 
+  const inputStyle = { background: '#252538', border: `1px solid ${T.border}` };
+
   return (
-    <div className="space-y-4 pb-4">
-      <SectionCard title="ID Number & DOB">
-        <FieldWithBtn label="DL Number" name="dlNo" value={f.dlNo} onChange={handleChange}
-          btnLabel="GEN" onBtn={() => setField('dlNo', genDL())} />
-        <div className="mt-3">
-          <Field label="Date of Birth" name="dob" value={f.dob} onChange={handleChange} type="date" />
-        </div>
-      </SectionCard>
+    <div className="pb-4">
+      {/* 3-column grid — stacks to 1 col on mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-      <SectionCard title="Name">
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="First Name"  name="firstName"  value={f.firstName}  onChange={handleChange} />
-          <Field label="Last Name"   name="lastName"   value={f.lastName}   onChange={handleChange} />
-        </div>
-        <div className="grid grid-cols-2 gap-3 mt-3">
-          <Field label="Middle Name" name="middleName" value={f.middleName} onChange={handleChange} />
-          <Field label="Suffix"      name="suffix"     value={f.suffix}     onChange={handleChange} />
-        </div>
-      </SectionCard>
+        {/* ── Left column ── */}
+        <div className="space-y-5">
+          <Section title="ID Number &amp; DOB">
+            <FieldWithBtn label="DL Number" name="dlNo" value={f.dlNo} onChange={handleChange}
+              btnLabel="GEN" onBtn={() => setField('dlNo', genDL())} />
+            <div className="mt-3">
+              <Field label="Date of Birth" name="dob" value={f.dob} onChange={handleChange} type="date" />
+            </div>
+          </Section>
 
-      <SectionCard title="Address">
-        <Field label="Street" name="address1" value={f.address1} onChange={handleChange} />
-        <div className="grid grid-cols-3 gap-3 mt-3">
-          <Field label="City"  name="city"  value={f.city}  onChange={handleChange} className="col-span-2" />
-          <Field label="State" name="state" value={f.state} onChange={handleChange} />
-        </div>
-        <div className="mt-3">
-          <Field label="Zip" name="zip" value={f.zip} onChange={handleChange} />
-        </div>
-      </SectionCard>
+          <Section title="Name">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="First Name" name="firstName" value={f.firstName} onChange={handleChange} />
+              <Field label="Last Name"  name="lastName"  value={f.lastName}  onChange={handleChange} />
+            </div>
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <Field label="Middle Name" name="middleName" value={f.middleName} onChange={handleChange} />
+              <Field label="Suffix"      name="suffix"     value={f.suffix}     onChange={handleChange} />
+            </div>
+          </Section>
 
-      <SectionCard title="License Details">
-        <div className="grid grid-cols-3 gap-3">
-          <Field label="Class" name="class" value={f.class} onChange={handleChange} />
-          <Field label="End"   name="end"   value={f.end}   onChange={handleChange} />
-          <Field label="Rest"  name="rest"  value={f.rest}  onChange={handleChange} />
+          <Section title="Photo">
+            {photo && (
+              <div className="w-24 h-32 mx-auto rounded-xl overflow-hidden mb-3"
+                style={{ border: `2px solid ${T.accent}` }}>
+                <img src={photo.src} className="w-full h-full object-cover" alt="id" />
+              </div>
+            )}
+            <UploadBtn label="Upload Photo"
+              onChange={e => e.target.files[0] && loadImageFile(e.target.files[0], setPhoto)}
+              icon={ImageIcon} />
+            <div className="flex gap-2 mt-2">
+              <div className="relative flex-1 flex items-center justify-center gap-2 rounded-lg p-3 active:opacity-70 transition-colors"
+                style={inputStyle}>
+                <input type="file" accept="image/*" onChange={handleAdvancedPhotoUpload}
+                  disabled={isProcessingPhoto}
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" />
+                {isProcessingPhoto
+                  ? <><Loader2 className="w-4 h-4 animate-spin" style={{ color: T.accent }} /><span className="text-[11px] font-semibold" style={{ color: T.accent }}>Processing…</span></>
+                  : <><ScanFace className="w-4 h-4" style={{ color: T.accent }} /><span className="text-[11px] font-semibold" style={{ color: T.accent }}>AI Remove BG</span></>}
+              </div>
+              <button onClick={() => setShowCamera(true)} disabled={isProcessingPhoto}
+                className="flex items-center justify-center gap-2 rounded-lg px-4 disabled:opacity-40 active:opacity-70"
+                style={inputStyle}>
+                {isProcessingPhoto
+                  ? <Loader2 className="w-5 h-5 animate-spin" style={{ color: T.accent }} />
+                  : <Camera className="w-5 h-5" style={{ color: T.accent }} />}
+              </button>
+            </div>
+          </Section>
         </div>
-        <div className="mt-3">
-          <Field label="Issue Date" name="iss" value={f.iss} onChange={handleChange} type="date" />
-        </div>
-      </SectionCard>
 
-      <SectionCard title="Physical">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold" style={{ color: T.label }}>Sex</label>
-            <select name="sex" value={f.sex} onChange={handleChange}
-              className="w-full rounded-lg px-3 py-3 text-[14px] font-medium text-white outline-none appearance-none"
-              style={{ background: '#252538', border: `1px solid ${T.border}` }}>
-              <option value="1">M — Male</option>
-              <option value="2">F — Female</option>
-              <option value="9">X — Non-binary</option>
-            </select>
-          </div>
-          <Field label="Weight (lbs)" name="wgt" value={f.wgt} onChange={handleChange} />
-        </div>
-        <div className="grid grid-cols-3 gap-3 mt-3">
-          <Field label="Height Ft" name="heightFeet"   value={f.heightFeet}   onChange={handleChange} />
-          <Field label="Height In" name="heightInches" value={f.heightInches} onChange={handleChange} />
-          <Field label="Eyes"      name="eyes"         value={f.eyes}         onChange={handleChange} />
-        </div>
-        <div className="grid grid-cols-2 gap-3 mt-3">
-          <Field label="Hair"    name="hair"    value={f.hair}    onChange={handleChange} />
-          <Field label="Country" name="country" value={f.country} onChange={handleChange} />
-        </div>
-      </SectionCard>
+        {/* ── Middle column ── */}
+        <div className="space-y-5">
+          <Section title="Address">
+            <Field label="Street" name="address1" value={f.address1} onChange={handleChange} />
+            <div className="grid grid-cols-3 gap-3 mt-3">
+              <Field label="City"  name="city"  value={f.city}  onChange={handleChange} className="col-span-2" />
+              <Field label="State" name="state" value={f.state} onChange={handleChange} />
+            </div>
+            <div className="mt-3">
+              <Field label="Zip" name="zip" value={f.zip} onChange={handleChange} />
+            </div>
+          </Section>
 
-      <SectionCard title="Audit" defaultOpen={false}>
-        <FieldWithBtn label="DD Code" name="dd" value={f.dd} onChange={handleChange}
-          btnLabel="GEN" onBtn={() => setField('dd', genDD())} />
-        <div className="mt-3">
-          <Field label="Compliance" name="compliance" value={f.compliance} onChange={handleChange} />
+          <Section title="Signature">
+            {signature && (
+              <div className="w-full h-20 rounded-xl overflow-hidden mb-3 flex items-center justify-center bg-white">
+                <img src={signature.src} className="max-w-full max-h-full object-contain" alt="sig" />
+              </div>
+            )}
+            <div className="rounded-xl h-32 flex items-center justify-center relative"
+              style={{ background: '#1a1a2e', border: `1px solid ${T.border}` }}>
+              <input type="file" accept="image/*"
+                onChange={e => e.target.files[0] && loadImageFile(e.target.files[0], setSignature)}
+                className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full" />
+              <div className="flex flex-col items-center gap-2">
+                <Upload className="w-5 h-5" style={{ color: T.muted }} />
+                <span className="text-[12px] font-semibold" style={{ color: T.muted }}>Upload Signature</span>
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Audit">
+            <FieldWithBtn label="DD Code" name="dd" value={f.dd} onChange={handleChange}
+              btnLabel="GEN" onBtn={() => setField('dd', genDD())} />
+            <div className="mt-3">
+              <Field label="Compliance" name="compliance" value={f.compliance} onChange={handleChange} />
+            </div>
+          </Section>
         </div>
-      </SectionCard>
+
+        {/* ── Right column ── */}
+        <div className="space-y-5">
+          <Section title="License Details">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Class" name="class" value={f.class} onChange={handleChange} />
+              <Field label="Rest"  name="rest"  value={f.rest}  onChange={handleChange} />
+            </div>
+            <div className="mt-3">
+              <Field label="Issue Date" name="iss" value={f.iss} onChange={handleChange} type="date" />
+            </div>
+          </Section>
+
+          <Section title="Physical">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-semibold" style={{ color: T.label }}>Sex</label>
+                <select name="sex" value={f.sex} onChange={handleChange}
+                  className="w-full rounded-lg px-3 py-3 text-[14px] font-medium text-white outline-none appearance-none"
+                  style={inputStyle}>
+                  <option value="1">M — Male</option>
+                  <option value="2">F — Female</option>
+                  <option value="9">X — Non-binary</option>
+                </select>
+              </div>
+              <Field label="Weight (lbs)" name="wgt" value={f.wgt} onChange={handleChange} />
+            </div>
+            <div className="grid grid-cols-3 gap-3 mt-3">
+              <Field label="Height Ft" name="heightFeet"   value={f.heightFeet}   onChange={handleChange} />
+              <Field label="Height In" name="heightInches" value={f.heightInches} onChange={handleChange} />
+              <Field label="Eyes"      name="eyes"         value={f.eyes}         onChange={handleChange} />
+            </div>
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <Field label="Hair"    name="hair"    value={f.hair}    onChange={handleChange} />
+              <Field label="Country" name="country" value={f.country} onChange={handleChange} />
+            </div>
+          </Section>
+        </div>
+      </div>
     </div>
   );
 };
@@ -665,17 +710,20 @@ const App = () => {
         </div>
 
         {/* ── Scrollable Panel ── */}
-        <div className="flex-1 overflow-y-auto px-3 pt-2"
+        <div className="flex-1 overflow-y-auto px-4 pt-4"
           style={{ WebkitOverflowScrolling: 'touch', paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}>
-          <PhotoPanel
-            backgroundImage={backgroundImage} backBackgroundImage={backBackgroundImage}
-            photo={photo} signature={signature} referenceImage={referenceImage} showRef={showRef}
-            isProcessingPhoto={isProcessingPhoto} setShowCamera={setShowCamera} setShowRef={setShowRef}
-            setPhoto={setPhoto} setSignature={setSignature} setBackgroundImage={setBackgroundImage}
-            setBackBackgroundImage={setBackBackgroundImage} setReferenceImage={setReferenceImage}
+          <InfoPanel
+            initialInfo={DEFAULT_INFO} onInfoChange={handleInfoChange}
+            photo={photo} signature={signature} isProcessingPhoto={isProcessingPhoto}
+            setShowCamera={setShowCamera} setPhoto={setPhoto} setSignature={setSignature}
             handleAdvancedPhotoUpload={handleAdvancedPhotoUpload}
           />
-          <InfoPanel initialInfo={DEFAULT_INFO} onInfoChange={handleInfoChange} />
+          <PhotoPanel
+            backgroundImage={backgroundImage} backBackgroundImage={backBackgroundImage}
+            referenceImage={referenceImage} showRef={showRef}
+            setShowRef={setShowRef} setBackgroundImage={setBackgroundImage}
+            setBackBackgroundImage={setBackBackgroundImage} setReferenceImage={setReferenceImage}
+          />
           <BatchPanel
             batchText={batchText} setBatchText={setBatchText}
             batchCount={batchCount} setBatchCount={setBatchCount}
