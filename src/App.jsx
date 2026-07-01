@@ -530,6 +530,7 @@ const App = () => {
   const [isBatching,  setIsBatching]  = useState(false);
   const abortBatchRef = useRef(false);
   const [cardSide,    setCardSide]    = useState('front');
+  const [showPreview, setShowPreview] = useState(true);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const [showCamera,   setShowCamera]   = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -807,26 +808,38 @@ const App = () => {
 
         {/* ── Card Preview ── */}
         <div className="shrink-0 px-4 pt-3 pb-2 flex flex-col items-center">
-          {/* Constrain to ~1 column width on desktop, full width on mobile */}
           <div className="w-full" style={{ maxWidth: 'min(calc((100vw - 32px) / 3), 480px)' }}>
-            <div className="flex gap-2 mb-2">
-              {['front','back'].map(side => (
-                <button key={side} onClick={() => setCardSide(side)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm transition-all active:opacity-80"
-                  style={{ background: cardSide===side ? T.accent : T.card, color: cardSide===side ? '#fff' : T.muted }}>
-                  {side==='front' ? <UserCircle className="w-4 h-4" /> : <Barcode className="w-4 h-4" />}
-                  {side==='front' ? 'Front ID' : 'Back Barcode'}
-                </button>
-              ))}
-            </div>
-            <div className="p-1.5 rounded-2xl shadow-xl w-full"
-              style={{ aspectRatio: '1000/630', background: T.card }}>
-              <div className="relative rounded-xl overflow-hidden w-full h-full">
-                <canvas ref={canvasRef}        width={1000} height={630} className={`absolute inset-0 w-full h-full ${cardSide==='front'?'block':'hidden'}`} />
-                <canvas ref={backCanvasRef}    width={1000} height={630} className={`absolute inset-0 w-full h-full ${cardSide==='back'?'block':'hidden'}`} />
-                <canvas ref={barcodeCanvasRef} style={{ display:'none' }} />
-              </div>
-            </div>
+            {/* Toggle row */}
+            <button onClick={() => setShowPreview(v => !v)}
+              className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl mb-2 text-sm font-semibold transition-all active:opacity-70"
+              style={{ background: T.card, color: T.muted }}>
+              <span style={{ color: T.label }}>Preview</span>
+              <ChevronDown className="w-4 h-4 transition-transform duration-200"
+                style={{ transform: showPreview ? 'rotate(0deg)' : 'rotate(-90deg)', color: T.muted }} />
+            </button>
+
+            {showPreview && (
+              <>
+                <div className="flex gap-2 mb-2">
+                  {['front','back'].map(side => (
+                    <button key={side} onClick={() => setCardSide(side)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-sm transition-all active:opacity-80"
+                      style={{ background: cardSide===side ? T.accent : T.card, color: cardSide===side ? '#fff' : T.muted }}>
+                      {side==='front' ? <UserCircle className="w-4 h-4" /> : <Barcode className="w-4 h-4" />}
+                      {side==='front' ? 'Front ID' : 'Back Barcode'}
+                    </button>
+                  ))}
+                </div>
+                <div className="p-1.5 rounded-2xl shadow-xl w-full"
+                  style={{ aspectRatio: '1000/630', background: T.card }}>
+                  <div className="relative rounded-xl overflow-hidden w-full h-full">
+                    <canvas ref={canvasRef}        width={1000} height={630} className={`absolute inset-0 w-full h-full ${cardSide==='front'?'block':'hidden'}`} />
+                    <canvas ref={backCanvasRef}    width={1000} height={630} className={`absolute inset-0 w-full h-full ${cardSide==='back'?'block':'hidden'}`} />
+                    <canvas ref={barcodeCanvasRef} style={{ display:'none' }} />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
