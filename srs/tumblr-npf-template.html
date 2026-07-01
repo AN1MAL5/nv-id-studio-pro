@@ -1,0 +1,35 @@
+<!--
+Tumblr NPF custom theme snippet template for embedding NV ID Studio Pro.
+
+Tumblr docs: https://www.tumblr.com/docs/en/custom_themes#npf
+
+Usage idea:
+- Put this HTML somewhere your Tumblr theme/NPF can render.
+- Ensure the embedded app URLs (JS/CSS) point to your deployed Vite build.
+- Prefer a dedicated origin for the app and use CSP accordingly.
+-->
+
+<div class="nv-id-studio" data-nv-id-studio-host="https://YOUR-DEPLOYED-APP">
+  <div style="max-width: 980px; margin: 0 auto; padding: 16px;">
+    <div style="font-weight: 700; margin-bottom: 12px;">NV ID Studio Pro</div>
+
+    <!--
+      NOTE: Tumblr NPF will not automatically “bundle” your React app.
+      Embed the compiled output from your Vite build.
+
+      For local dev, this won't work on Tumblr.
+    -->
+    <iframe
+      title="NV ID Studio Pro"
+      src="https://YOUR-DEPLOYED-APP/"
+      style="width: 100%; height: 900px; border: 0; border-radius: 12px;"
+      loading="lazy"
+      referrerpolicy="no-referrer"
+    ></iframe>
+
+    <p style="font-size: 12px; opacity: 0.7; margin-top: 10px;">
+      If the iframe is blank, verify the deployed URL and that your hosting allows embedding (X-Frame-Options / CSP).
+    </p>
+  </div>
+</div>
+
